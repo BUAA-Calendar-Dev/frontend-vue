@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="This is home view." :jumps="links" />
+    <HelloWorld msg="This is login view." :jumps="links" />
   </div>
 </template>
 
@@ -10,13 +10,13 @@
 import HelloWorld from "@/components/HelloWorld.vue";
 
 export default {
-  name: "HomeView",
+  name: "LoginView",
   components: {
     HelloWorld,
   },
   data() {
     return {
-      links: ["/", "/class/manager", "/activity", "/account"],
+      links: ["/", "/home", "/register", "/admin"],
     };
   },
 };
