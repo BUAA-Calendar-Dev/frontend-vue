@@ -120,7 +120,7 @@ export default {
     jumps: Array,
   },
   created() {
-    this.$axios.get("/api/hello-world").then((response) => {
+    this.$apis.getHelloWorld().then((response) => {
       this.resp = response.data.msg;
     });
   },
