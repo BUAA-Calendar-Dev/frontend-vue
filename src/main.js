@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 
-process.env.VUE_APP_MOCK == "true" && require("@/mock/index");
+process.env.VUE_APP_MOCK == "true" && require("@/mocks/index");
 
 import axios from "axios";
 
