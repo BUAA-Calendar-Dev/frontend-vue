@@ -2,7 +2,8 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 
-import "@/mock/index.js";
+process.env.VUE_APP_MOCK == "true" && require("@/mock/index");
+
 import axios from "axios";
 
 const app = createApp(App);
