@@ -11,6 +11,10 @@
     </ul>
     <hr />
     <p>
+      This is the message from axios: <code>{{ this.resp }}</code>
+    </p>
+    <hr />
+    <p>
       For a guide and recipes on how to configure / customize this project,<br />
       check out the
       <a href="https://cli.vuejs.org" target="_blank" rel="noopener"
@@ -106,9 +110,19 @@
 <script>
 export default {
   name: "HelloWorld",
+  data() {
+    return {
+      resp: "<undefined>",
+    };
+  },
   props: {
     msg: String,
     jumps: Array,
+  },
+  created() {
+    this.$axios.get("/api/hello-world").then((response) => {
+      this.resp = response.data.msg;
+    });
   },
 };
 </script>
