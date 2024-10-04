@@ -13,7 +13,10 @@ export class Authentic {
    * Whether the login status is valid
    */
   isValid() {
-    return this.token !== null && this.role in ["student", "teacher", "admin"];
+    return (
+      this.token !== null &&
+      ["student", "teacher", "admin"].indexOf(this.role) != -1
+    );
   }
 
   /**

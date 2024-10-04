@@ -58,6 +58,7 @@ import { Message } from "@element-plus/icons-vue";
 
 <script>
 import MessageList from "@/components/MessageList.vue";
+import { ElMessageBox } from "element-plus";
 
 export default {
   name: "HomeView",
@@ -72,6 +73,10 @@ export default {
     };
   },
   mounted() {
+    if (!this.$var.auth.isValid()) {
+      ElMessageBox.alert("登录失效！", { type: "warning" });
+      this.$router.push({ path: "/" });
+    }
     if (this.$var.auth.role == "student") {
       this.updateMessage();
     }
