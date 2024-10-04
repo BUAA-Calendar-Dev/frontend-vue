@@ -27,11 +27,13 @@
                   :max="99"
                   class="item"
                 >
-                  <el-button
-                    :icon="Message"
-                    circle
-                    @click="openMessageDrawer"
-                  />
+                  <el-tooltip content="消息">
+                    <el-button
+                      :icon="Message"
+                      circle
+                      @click="openMessageDrawer"
+                    />
+                  </el-tooltip>
                 </el-badge>
               </span>
             </el-row>
@@ -46,7 +48,7 @@
     <template #header>
       <h4>收到的消息</h4>
     </template>
-    <MessageList :messages="messageList" />
+    <MessageList :messages="messageList" :update="updateMessage" />
   </el-drawer>
 </template>
 

@@ -9,8 +9,15 @@
         <template #header>
           <div class="card-header">
             <div class="msg-title">
-              <el-icon v-if="message.unread"><BellFilled /></el-icon>
               {{ message.title }}
+              <el-tooltip content="标记已读">
+                <el-button
+                  v-if="message.unread"
+                  :icon="Check"
+                  circle
+                  @click="() => onRead(message.id)"
+                />
+              </el-tooltip>
             </div>
           </div>
         </template>
@@ -30,7 +37,7 @@
 </template>
 
 <script setup>
-import { BellFilled } from "@element-plus/icons-vue";
+import { Check } from "@element-plus/icons-vue";
 </script>
 
 <script>
@@ -38,6 +45,15 @@ export default {
   name: "MessageList",
   props: {
     messages: Array,
+    update: Function,
+  },
+  methods: {
+    onRead(id) {
+      console.log("mark read the message with id " + id);
+      this.$apis.setReadMessage(id).then(() => {
+        this.update();
+      });
+    },
   },
 };
 </script>

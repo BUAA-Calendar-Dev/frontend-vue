@@ -1,6 +1,6 @@
 import mockjs from "mockjs";
 
-mockjs.mock("/api/message", "get", {
+var data = {
   code: 0,
   messages: [
     {
@@ -28,4 +28,19 @@ mockjs.mock("/api/message", "get", {
       unread: true,
     },
   ],
+};
+
+mockjs.mock("/api/message", "get", data);
+
+const read_message_pat = RegExp("/api/message/(\\d+)/read");
+
+mockjs.mock(read_message_pat, "post", (options) => {
+  const urlParams = options.url.match(read_message_pat);
+  if (urlParams) {
+    const id = urlParams[1];
+    data.messages[id - 1].unread = false;
+  }
+  return {
+    code: 0,
+  };
 });
