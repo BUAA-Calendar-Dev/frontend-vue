@@ -9,6 +9,7 @@ process.env.VUE_APP_MOCK == "true" && require("@/mocks/index");
 
 const app = createApp(App);
 
+app.config.globalProperties.$ = require("@/global/index").default;
 app.config.globalProperties.$apis = require("@/apis/index").default;
 app.use(router).use(ElementPlus);
 app.mount("#app");
