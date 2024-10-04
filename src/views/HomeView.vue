@@ -27,7 +27,11 @@
                   :max="99"
                   class="item"
                 >
-                  <el-button :icon="Message" circle />
+                  <el-button
+                    :icon="Message"
+                    circle
+                    @click="openMessageDrawer"
+                  />
                 </el-badge>
               </span>
             </el-row>
@@ -37,6 +41,13 @@
       </el-container>
     </el-container>
   </div>
+  <!-- Drawer: message list (student) -->
+  <el-drawer v-model="message_drawer" :direction="'rtl'">
+    <template #header>
+      <h4>收到的消息</h4>
+    </template>
+    <MessageList :messages="messageList" />
+  </el-drawer>
 </template>
 
 <script setup>
@@ -44,16 +55,27 @@ import { Message } from "@element-plus/icons-vue";
 </script>
 
 <script>
+import MessageList from "@/components/MessageList.vue";
+
 export default {
   name: "HomeView",
+  component: {
+    MessageList,
+  },
   data() {
     return {
       messageList: [],
       unread: 0,
+      message_drawer: false,
     };
   },
   mounted() {
     if (this.$var.auth.role == "student") {
+      this.updateMessage();
+    }
+  },
+  methods: {
+    updateMessage() {
       this.$apis.getMessageList().then((response) => {
         this.messageList = response.data.messages;
         this.unread = 0;
@@ -62,8 +84,18 @@ export default {
             this.unread++;
           }
         }
+        console.log(response.data.messages);
       });
-    }
+    },
+    openMessageDrawer() {
+      if (this.$var.auth.role != "student") {
+        console.warn(
+          `Open Message: expected a student, got a {this.$var.auth.role}`
+        );
+        return;
+      }
+      this.message_drawer = true;
+    },
   },
 };
 </script>
