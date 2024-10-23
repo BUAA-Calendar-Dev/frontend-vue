@@ -1,4 +1,11 @@
-# BUAA Calendar（前端）
+# BUAA Calendar（前端） homePage部分
+
+## 依赖下载
+
+目前使用`vue-cal`作为homePage的核心组件，需要使用以下方式来安装依赖。
+```
+yarn add vue-cal
+```
 
 ## 构建项目
 

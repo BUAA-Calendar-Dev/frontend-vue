@@ -40,7 +40,10 @@
         </el-row>
       </el-aside>
       <el-container>
-        <el-header style="background-color: antiquewhite">
+        <el-header
+          style="background-color: antiquewhite"
+          :style="{ height: '80px' }"
+        >
           <el-main>
             <el-row align="middle" justify="space-between">
               <!-- Header: switch-role (teacher) [TODO] -->
@@ -86,35 +89,28 @@
           </el-main>
         </el-header>
         <el-main style="background-color: honeydew">
-          <el-calendar ref="calendar">
-            <template #date-cell="{ data }">
-              <p :class="data.isSelected ? 'is-selected' : ''">
-                {{ data.day.split("-").slice(1).join("-") }}
-                {{ data.isSelected ? "✔️" : "" }}
-              </p>
-            </template>
+          <vue-cal
+            ref="calendar"
+            locale="zh-cn"
+            @cell-click="handleDateClick"
+            :style="{ height: '1150px' }"
+          >
             <template #header="{ date }">
               <span>Custom header content</span>
               <span>{{ date }}</span>
               <el-button-group>
-                <el-button size="small" @click="selectDate('prev-year')">
-                  Previous Year
-                </el-button>
-                <el-button size="small" @click="selectDate('prev-month')">
-                  Previous Month
-                </el-button>
+                <el-button size="small" @click="selectDate('prev-month')"
+                  >Previous Month</el-button
+                >
                 <el-button size="small" @click="selectDate('today')"
                   >Today</el-button
                 >
-                <el-button size="small" @click="selectDate('next-month')">
-                  Next Month
-                </el-button>
-                <el-button size="small" @click="selectDate('next-year')">
-                  Next Year
-                </el-button>
+                <el-button size="small" @click="selectDate('next-month')"
+                  >Next Month</el-button
+                >
               </el-button-group>
             </template>
-          </el-calendar>
+          </vue-cal>
           <!-- 弹出的小窗 -->
           <el-dialog v-model="dialogVisible" title="日期详情">
             <span>您点击的日期是: {{ selectedDate }}</span>
@@ -137,6 +133,8 @@
 
 <script setup>
 import { Message } from "@element-plus/icons-vue";
+import VueCal from "vue-cal";
+import "vue-cal/dist/vuecal.css"; // 导入样式
 </script>
 
 <script>

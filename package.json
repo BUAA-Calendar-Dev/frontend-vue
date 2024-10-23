@@ -14,6 +14,7 @@
     "core-js": "^3.8.3",
     "element-plus": "^2.8.4",
     "vue": "^3.2.13",
+    "vue-cal": "^4.10.0",
     "vue-router": "^4.0.3"
   },
   "devDependencies": {
