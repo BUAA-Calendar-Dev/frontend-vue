@@ -25,7 +25,7 @@ export default {
   },
   data() {
     return {
-      links: ["/", "/home", "/register", "/admin"],
+      links: ["/", "/home", "/register", "/admin", "/user"],
     };
   },
   methods: {

@@ -36,6 +36,11 @@ const routes = [
     name: "activity",
     component: () => import("../views/ActivityView.vue"),
   },
+  {
+    path: "/user",
+    name: "user",
+    component: () => import("../views/UserView.vue"),
+  },
 ];
 
 const router = createRouter({
