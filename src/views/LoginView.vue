@@ -3,10 +3,10 @@
     <img alt="Vue logo" src="../assets/logo.png" />
     <br />
     <el-button-group>
-      <el-button type="primary" round @click="loginAsTeacher"
+      <el-button type="primary" round @click="login('teacher')"
         >Login As Teacher</el-button
       >
-      <el-button type="primary" round @click="loginAsStudent"
+      <el-button type="primary" round @click="login('student')"
         >Login As Student</el-button
       >
     </el-button-group>
@@ -29,13 +29,14 @@ export default {
     };
   },
   methods: {
-    loginAsTeacher() {
-      this.$var.auth.login("fake-token", "teacher");
-      this.$router.push({ path: "/home" });
-    },
-    loginAsStudent() {
-      this.$var.auth.login("fake-token", "student");
-      this.$router.push({ path: "/home" });
+    login(role) {
+      this.$apis.login("Bob", "HelloWorld", role).then((response) => {
+        if (response.data.code != 0) {
+          return; // TODO: Login Failed
+        }
+        this.$var.auth.login(response.data.token, role, response.data.user_id);
+        this.$router.push({ path: "/home" });
+      });
     },
   },
 };

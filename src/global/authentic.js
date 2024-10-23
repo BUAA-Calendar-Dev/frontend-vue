@@ -2,11 +2,13 @@ export class Authentic {
   constructor() {
     this.token = null;
     this.role = "";
+    this.id = 0;
   }
 
-  login(token, role) {
+  login(token, role, id) {
     this.token = token;
     this.role = role;
+    this.id = id;
   }
 
   /**
