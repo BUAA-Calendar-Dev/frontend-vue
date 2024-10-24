@@ -135,6 +135,7 @@
             locale="zh-cn"
             @cell-click="handleDateClick"
             :style="{ height: '1150px' }"
+            :special-hours="specialHours"
           >
             <template #header="{ date }">
               <span>Custom header content</span>
@@ -197,6 +198,7 @@ export default {
       username: this.$var.auth.username || "Unknown User", // 用户名
       selectedDate: "",
       dialogVisible: false, // 用于控制 dialog 的显示与隐藏
+      specialHours: [],
     };
   },
   mounted() {
@@ -207,6 +209,8 @@ export default {
     if (this.$var.auth.role == "student") {
       this.updateMessage();
     }
+    this.updateUser();
+    this.updateSpecialHours();
   },
   methods: {
     transferToStudent() {
@@ -237,6 +241,18 @@ export default {
     },
     goToDDL() {
       this.$router.push({ path: "/ddl" });
+    },
+    updateUser() {
+      this.$apis.getUser().then((response) => {
+        this.username = response.data.users.username;
+        this.avatar = response.data.users.avatar;
+        console.log(response.data.username);
+      });
+    },
+    updateSpecialHours() {
+      this.$apis.getEvent().then((response) => {
+        this.specialHours = response.data.specialHours;
+      });
     },
     updateMessage() {
       this.$apis.getMessageList().then((response) => {
@@ -272,5 +288,25 @@ html {
   width: 100%;
   height: 100%;
   margin: 0;
+}
+.vuecal__special-hours {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+
+  em {
+    font-size: 0.9em;
+    color: #999;
+  }
+}
+
+.doctor-1 {
+  background-color: #f0fff1;
+  color: #81d58b;
+}
+.doctor-2 {
+  background-color: #f0f6ff;
+  color: #689bee;
 }
 </style>

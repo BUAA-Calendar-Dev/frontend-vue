@@ -1,5 +1,7 @@
 import { getHelloWorld } from "@/apis/demo";
 import { getMessageList, setReadMessage } from "@/apis/message-receiver";
+import { getUser } from "@/apis/user";
+import { getEvent } from "@/apis/event";
 
 export default new (class {
   constructor() {
@@ -17,5 +19,15 @@ export default new (class {
      * post '/api/message/{id}/read
      */
     this.setReadMessage = setReadMessage;
+
+    /**
+     * get '/api/user
+     */
+    this.getUser = getUser;
+
+    /**
+     * get '/api/events
+     */
+    this.getEvent = getEvent;
   }
 })();
