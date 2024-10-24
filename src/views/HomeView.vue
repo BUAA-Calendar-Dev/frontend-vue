@@ -4,40 +4,78 @@
       <!-- 左侧栏 -->
       <el-aside width="400px" style="background-color: cyan">
         <!-- 班级 -->
-        <el-row justify="center" style="margin-top: 20px">
-          <el-col :span="18">
-            <el-link type="primary" @click="goToClass">班级</el-link>
-          </el-col>
-        </el-row>
+        <span v-if="$var.auth.role == 'teacher'">
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToClass">班级</el-link>
+            </el-col>
+          </el-row>
 
-        <!-- Tag + -->
-        <el-row justify="center" style="margin-top: 20px">
-          <el-col :span="18">
-            <el-link type="primary" @click="goToTags">Tag +</el-link>
-          </el-col>
-        </el-row>
+          <!-- Tag + -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToTags">管理班级</el-link>
+            </el-col>
+          </el-row>
 
-        <!-- 活动 -->
-        <el-row justify="center" style="margin-top: 20px">
-          <el-col :span="18">
-            <el-link type="primary" @click="goToActivities">活动</el-link>
-          </el-col>
-        </el-row>
+          <!-- 活动 -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToActivities">创建提醒</el-link>
+            </el-col>
+          </el-row>
 
-        <!-- 浏览全校活动 / DDL -->
-        <el-row justify="center" style="margin-top: 20px">
-          <el-col :span="18">
-            <el-link type="primary" @click="goToSchoolActivities"
-              >浏览全校活动</el-link
-            >
-            <el-link
-              type="primary"
-              @click="goToDDL"
-              style="display: block; margin-top: 10px"
-              >DDL</el-link
-            >
-          </el-col>
-        </el-row>
+          <!-- 浏览全校活动 / DDL -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToSchoolActivities"
+                >DDL</el-link
+              >
+              <el-link
+                type="primary"
+                @click="goToDDL"
+                style="display: block; margin-top: 10px"
+                >已发布的DDL</el-link
+              >
+            </el-col>
+          </el-row>
+        </span>
+        <span v-if="$var.auth.role == 'student'">
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToClass">班级</el-link>
+            </el-col>
+          </el-row>
+
+          <!-- Tag + -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToTags">Tag +</el-link>
+            </el-col>
+          </el-row>
+
+          <!-- 活动 -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToActivities">活动</el-link>
+            </el-col>
+          </el-row>
+
+          <!-- 浏览全校活动 / DDL -->
+          <el-row justify="center" style="margin-top: 20px">
+            <el-col :span="18">
+              <el-link type="primary" @click="goToSchoolActivities"
+                >浏览全校活动</el-link
+              >
+              <el-link
+                type="primary"
+                @click="goToDDL"
+                style="display: block; margin-top: 10px"
+                >DDL</el-link
+              >
+            </el-col>
+          </el-row>
+        </span>
       </el-aside>
       <el-container>
         <el-header
@@ -49,6 +87,9 @@
               <!-- Header: switch-role (teacher) [TODO] -->
               <span v-if="$var.auth.role == 'teacher'">
                 You are a teacher
+                <el-button @click="transferToStudent" type="warning" round>
+                  切换为学生
+                </el-button>
               </span>
               <!-- Header: messages (student) -->
               <span v-if="$var.auth.role == 'student'">
@@ -168,6 +209,11 @@ export default {
     }
   },
   methods: {
+    transferToStudent() {
+      this.$var.auth.role = "student";
+      //后端更新身份
+      this.$forceUpdate();
+    },
     handleDateClick(date) {
       console.log("日期点击事件触发: ", date); // 调试信息
       this.selectedDate = date; // 获取点击的日期
