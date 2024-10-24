@@ -40,6 +40,18 @@ const routes = [
     path: "/user",
     name: "user",
     component: () => import("../views/UserView.vue"),
+    children: [
+      {
+        path: "profile",
+        name: "profile",
+        component: () => import("../views/UserInfo/ProfileView.vue"),
+      },
+      {
+        path: "preference",
+        name: "preference",
+        component: () => import("../views/UserInfo/PreferenceView.vue"),
+      },
+    ],
   },
 ];
 
