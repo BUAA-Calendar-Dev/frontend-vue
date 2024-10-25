@@ -3,6 +3,7 @@ import { getMessageList, setReadMessage } from "@/apis/message-receiver";
 import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login } from "@/apis/authentic";
+import { getUserInfo, setUserInfo } from "@/apis/userinfo";
 
 export default new (class {
   constructor() {
@@ -40,5 +41,15 @@ export default new (class {
      * post '/api/user/login'
      */
     this.login = login;
+
+    /**
+     * get '/api/user/{id}/info'
+     */
+    this.getUserInfo = getUserInfo;
+
+    /**
+     * post '/api/user/modify'
+     */
+    this.setUserInfo = setUserInfo;
   }
 })();
