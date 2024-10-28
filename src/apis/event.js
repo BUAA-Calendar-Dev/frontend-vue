@@ -4,4 +4,11 @@ export function getEvent() {
   return axios.get("/api/event");
 }
 
-//post方法应当传入 用户、班级返回当前的DDL，不传班级则返回全部日程
+export function createEvent(EventStart, EventEnd, EventName, EventContent) {
+  return axios.post("/api/event/create", {
+    start: EventStart,
+    end: EventEnd,
+    title: EventName,
+    content: EventContent,
+  });
+}

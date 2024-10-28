@@ -107,6 +107,9 @@
                     />
                   </el-tooltip>
                 </el-badge>
+                <el-button @click="customEventCreation" type="warning" round>
+                  创建新日程
+                </el-button>
               </span>
               <!-- 右侧头像 -->
               <!-- 右侧头像和用户名 -->
@@ -136,6 +139,7 @@
             @cell-click="handleDateClick"
             :style="{ height: '1150px' }"
             :special-hours="specialHours"
+            :events="events"
           >
             <template #header="{ date }">
               <span>Custom header content</span>
@@ -153,6 +157,38 @@
               </el-button-group>
             </template>
           </vue-cal>
+          <!-- 弹窗：创建新事件 -->
+          <el-dialog
+            title="创建新事件"
+            v-model="eventDialogVisible"
+            width="400px"
+            @close="resetDialogFields"
+          >
+            <el-form>
+              <el-form-item label="事件名称" required>
+                <el-input v-model="eventName" placeholder="请输入事件名称" />
+              </el-form-item>
+              <el-form-item label="事件开始" required>
+                <el-input
+                  v-model="eventStart"
+                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                />
+              </el-form-item>
+              <el-form-item label="事件结束" required>
+                <el-input
+                  v-model="eventEnd"
+                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                />
+              </el-form-item>
+              <el-form-item label="事件内容" required>
+                <el-input v-model="eventContent" placeholder="请输入事件内容" />
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="eventDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="createEvent">确定</el-button>
+            </template>
+          </el-dialog>
           <!-- 弹出的小窗 -->
           <el-dialog v-model="dialogVisible" title="日期详情">
             <span>您点击的日期是: {{ selectedDate }}</span>
@@ -199,6 +235,12 @@ export default {
       selectedDate: "",
       dialogVisible: false, // 用于控制 dialog 的显示与隐藏
       specialHours: [],
+      events: [],
+      eventDialogVisible: false,
+      eventName: "",
+      eventStart: "",
+      eventEnd: "",
+      eventContent: "",
     };
   },
   mounted() {
@@ -213,6 +255,37 @@ export default {
     this.updateSpecialHours();
   },
   methods: {
+    customEventCreation() {
+      this.eventDialogVisible = true;
+      console.log(this.eventDialogVisible);
+    },
+    resetDialogFields() {
+      this.eventName = "";
+      this.eventDate = "";
+    },
+    createEvent() {
+      if (
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventStart) &&
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventEnd)
+      ) {
+        // this.$refs.calendar.createEvent(this.eventDate, 120, {
+        //   title: this.eventName,
+        //   content: "yay! 🎉",
+        //   class: "blue-event",
+        // });
+        this.$apis.createEvent(
+          this.eventStart,
+          this.eventEnd,
+          this.eventName,
+          this.eventContent
+        );
+        this.eventDialogVisible = false;
+        this.resetDialogFields();
+        this.updateEvents();
+      } else {
+        this.$message.error("日期格式不正确，请按 YYYY-MM-DD HH:mm 格式输入。");
+      }
+    },
     transferToStudent() {
       this.$var.auth.role = "student";
       //后端更新身份
@@ -252,6 +325,11 @@ export default {
     updateSpecialHours() {
       this.$apis.getEvent().then((response) => {
         this.specialHours = response.data.specialHours;
+      });
+    },
+    updateEvents() {
+      this.$apis.getEvent().then((response) => {
+        this.events = response.data.events;
       });
     },
     updateMessage() {
