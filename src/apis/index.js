@@ -24,6 +24,7 @@ export default new (class {
 
     /**
      * get '/api/user
+     * @deprecated Use `getUserInfo(id)` instead.
      */
     this.getUser = getUser;
 

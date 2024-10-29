@@ -229,9 +229,8 @@ export default {
       messageList: [],
       unread: 0,
       message_drawer: false,
-      userAvatar:
-        this.$var.auth.avatar || require("@/assets/default-avatar.png"), // 设置默认头像或从用户数据中获取
-      username: this.$var.auth.username || "Unknown User", // 用户名
+      userAvatar: require("@/assets/default-avatar.png"), // 设置默认头像
+      username: "Unknown User", // 用户名
       selectedDate: "",
       dialogVisible: false, // 用于控制 dialog 的显示与隐藏
       specialHours: [],
@@ -298,7 +297,7 @@ export default {
     },
     // 路由跳转方法,一些信息应该可以不跳转，直接就展示出来
     goToProfile() {
-      this.$router.push({ path: "/profile" });
+      this.$router.push({ path: "/user" });
     },
     goToClass() {
       this.$router.push({ path: "/class" });
@@ -316,9 +315,9 @@ export default {
       this.$router.push({ path: "/ddl" });
     },
     updateUser() {
-      this.$apis.getUser().then((response) => {
-        this.username = response.data.users.username;
-        this.avatar = response.data.users.avatar;
+      this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
+        this.username = response.data.username;
+        this.userAvatar = response.data.avatar;
         console.log(response.data.username);
       });
     },
