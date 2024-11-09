@@ -4,3 +4,4 @@ import "@/mocks/messages";
 import "@/mocks/event";
 import "@/mocks/authentic";
 import "@/mocks/userinfo";
+import "@/mocks/activity";

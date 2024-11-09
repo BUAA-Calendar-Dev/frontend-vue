@@ -4,6 +4,7 @@ import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
+import { getActivityList, getActivityContent } from "@/apis/activity";
 
 export default new (class {
   constructor() {
@@ -52,5 +53,15 @@ export default new (class {
      * post '/api/user/modify'
      */
     this.setUserInfo = setUserInfo;
+
+    /**
+     * get '/api/activity/public'
+     */
+    this.getActivityList = getActivityList;
+
+    /**
+     * get '/api/activity/{id}/detail'
+     */
+    this.getActivityContent = getActivityContent;
   }
 })();
