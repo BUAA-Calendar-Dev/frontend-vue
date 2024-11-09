@@ -35,6 +35,18 @@ const routes = [
     path: "/activity",
     name: "activity",
     component: () => import("../views/ActivityView.vue"),
+    children: [
+      {
+        path: "school",
+        name: "school",
+        component: () => import("../views/ActivityItem/SchoolActivityView.vue"),
+      },
+      {
+        path: "picked",
+        name: "picked",
+        component: () => import("../views/ActivityItem/PickedActivityView.vue"),
+      },
+    ],
   },
   {
     path: "/user",

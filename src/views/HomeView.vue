@@ -61,12 +61,14 @@
             </el-col>
           </el-row>
 
+          <!-- TODO: Why seperate them from the items above? ---- sk -->
           <!-- 浏览全校活动 / DDL -->
           <el-row justify="center" style="margin-top: 20px">
             <el-col :span="18">
-              <el-link type="primary" @click="goToSchoolActivities"
+              <!-- Remove this item since we have a "活动" above -->
+              <!-- <el-link type="primary" @click="goToSchoolActivities"
                 >浏览全校活动</el-link
-              >
+              > -->
               <el-link
                 type="primary"
                 @click="goToDDL"
@@ -306,8 +308,11 @@ export default {
       this.$router.push({ path: "/tags" });
     },
     goToActivities() {
-      this.$router.push({ path: "/activities" });
+      this.$router.push({ path: "/activity" });
     },
+    /**
+     * @deprecated use `goToActivities` instead
+     */
     goToSchoolActivities() {
       this.$router.push({ path: "/school-activities" });
     },
