@@ -11,5 +11,6 @@ const app = createApp(App);
 
 app.config.globalProperties.$var = require("@/global/index").default;
 app.config.globalProperties.$apis = require("@/apis/index").default;
+app.config.globalProperties.$utils = require("@/utils/index").default;
 app.use(router).use(ElementPlus);
 app.mount("#app");

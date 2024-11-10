@@ -13,7 +13,9 @@
         <div v-if="!item['signed-in']">
           <span class="activity-signed-in not-in">未参加</span>
         </div>
-        <div class="activity-time">{{ item.time }}</div>
+        <div class="activity-time">
+          {{ this.$utils.formatTimestamp(item.time, $var.timeFormatter) }}
+        </div>
       </template>
       <div class="activity-detail">
         {{ item.content }}

@@ -28,7 +28,11 @@
           <div class="card-footer">
             <!-- TODO: Make the footer more beautiful -->
             <div class="msg-info">发信人：{{ message.from }}</div>
-            <div class="msg-info">时间：{{ message.time }}</div>
+            <div class="msg-info">
+              时间：{{
+                this.$utils.formatTimestamp(message.time, $var.timeFormatter)
+              }}
+            </div>
           </div>
         </template>
       </el-card>
