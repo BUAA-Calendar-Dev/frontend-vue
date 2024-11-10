@@ -4,7 +4,11 @@ import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
-import { getActivityList, getActivityContent } from "@/apis/activity";
+import {
+  getActivityList,
+  getActivityContent,
+  updateActivityJoining,
+} from "@/apis/activity";
 
 export default new (class {
   constructor() {
@@ -63,5 +67,14 @@ export default new (class {
      * get '/api/activity/{id}/detail'
      */
     this.getActivityContent = getActivityContent;
+
+    /**
+     * post '/api/activity/{id}/exit'
+     *   or
+     * post '/api/activity/{id}/join'
+     *
+     * `operator` shall be 'exit' or 'join'
+     */
+    this.updateActivityJoining = updateActivityJoining;
   }
 })();

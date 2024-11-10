@@ -25,14 +25,37 @@ mockjs.mock("/api/activity/public", "get", () => {
   };
 });
 
-const get_activity_detail_pat = RegExp("/api/activity/(\\d+)/detail");
+const get_activity_pat = RegExp("/api/activity/(\\d+)/(\\w+)");
 
-mockjs.mock(get_activity_detail_pat, "get", (options) => {
-  const urlParams = options.url.match(get_activity_detail_pat);
+mockjs.mock(get_activity_pat, "get", (options) => {
+  const urlParams = options.url.match(get_activity_pat);
   const id = urlParams[1];
+  const operator = urlParams[2];
 
-  return {
-    code: 0,
-    content: `This is the detailed content of id=${id}.`,
-  };
+  if (operator == "detail") {
+    return {
+      code: 0,
+      content: `This is the detailed content of id=${id}.`,
+    };
+  }
+});
+
+mockjs.mock(get_activity_pat, "post", (options) => {
+  const urlParams = options.url.match(get_activity_pat);
+  const id = urlParams[1];
+  const operator = urlParams[2];
+
+  if (id == 1) {
+    signed_in_1 = operator == "join";
+  }
+
+  if (id == 2) {
+    signed_in_2 = operator == "join";
+  }
+
+  if (operator == "join" || operator == "exit") {
+    return {
+      code: 0,
+    };
+  }
 });

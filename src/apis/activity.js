@@ -7,3 +7,7 @@ export function getActivityList() {
 export function getActivityContent(id) {
   return axios.get(`/api/activity/${id}/detail`);
 }
+
+export function updateActivityJoining(id, operator) {
+  return axios.post(`/api/activity/${id}/${operator}`);
+}

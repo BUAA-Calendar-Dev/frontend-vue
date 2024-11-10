@@ -1,5 +1,5 @@
 <template>
-  <el-collapse accordion @change="expandItem">
+  <el-collapse accordion v-model="opened" @change="expandItem">
     <el-collapse-item
       v-for="(item, index) in activityList"
       :key="index"
@@ -22,7 +22,7 @@
           style="float: right"
           type="primary"
           round
-          @click="joinActivity(index)"
+          @click="interactActivity(index, 'join')"
           v-if="!item['signed-in']"
           >参加活动</el-button
         >
@@ -30,7 +30,7 @@
           style="float: right"
           type="danger"
           round
-          @click="exitActivity(index)"
+          @click="interactActivity(index, 'exit')"
           v-if="item['signed-in']"
           >退出活动</el-button
         >
@@ -76,6 +76,7 @@ export default {
   data() {
     return {
       activityList: [],
+      opened: null,
     };
   },
   mounted() {
@@ -83,6 +84,7 @@ export default {
   },
   methods: {
     updateList() {
+      this.opened = null;
       this.$apis.getActivityList().then((response) => {
         // TODO: Error Handler
         this.activityList = response.data.activities;
@@ -102,15 +104,17 @@ export default {
           this.activityList[index].content = response.data.content;
         });
     },
-    joinActivity(index) {
+    interactActivity(index, operator) {
       console.log(
-        `Joining Activity: ${index} With id=${this.activityList[index].id}`
+        `${operator}ing activity: ${index} With id=${this.activityList[index].id}`
       );
-    },
-    exitActivity(index) {
-      console.log(
-        `Exiting Activity: ${index} With id=${this.activityList[index].id}`
-      );
+      this.$apis
+        .updateActivityJoining(this.activityList[index].id, operator)
+        // eslint-disable-next-line no-unused-vars
+        .then((response) => {
+          // TODO: Error Handler
+          this.updateList();
+        });
     },
   },
 };
