@@ -179,18 +179,24 @@ export default {
     endModify(key) {
       this.listed[key].inModify = false;
       // eslint-disable-next-line no-unused-vars
-      this.$apis.setUserInfo(key, this.listed[key].content).then((_) => {
-        this.updateInfo();
-      }); // TODO: Error handler
+      this.$apis
+        .setUserInfo(key, this.listed[key].content)
+        // eslint-disable-next-line no-unused-vars
+        .then((response) => {
+          this.updateInfo();
+        })
+        .catch(this.$utils.handleHttpException);
     },
     updateInfo() {
-      this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
-        // TODO: Error Handler
-        this.username = response.data.username;
-        this.avatar = response.data.avatar;
-        this.listed.email.content = response.data.email;
-        this.listed.phone.content = response.data.phone;
-      });
+      this.$apis
+        .getUserInfo(this.$var.auth.id)
+        .then((response) => {
+          this.username = response.data.username;
+          this.avatar = response.data.avatar;
+          this.listed.email.content = response.data.email;
+          this.listed.phone.content = response.data.phone;
+        })
+        .catch(this.$utils.handleHttpException);
     },
     confirmModifyPassword() {
       this.inModifyPassword = false;

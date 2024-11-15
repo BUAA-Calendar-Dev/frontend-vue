@@ -87,13 +87,15 @@ export default {
   methods: {
     updateList() {
       this.opened = null;
-      this.$apis.getActivityList().then((response) => {
-        // TODO: Error Handler
-        this.activityList = response.data.activities;
-        for (let i = 0; i < this.activityList.length; i++) {
-          this.activityList[i].content = null;
-        }
-      });
+      this.$apis
+        .getActivityList()
+        .then((response) => {
+          this.activityList = response.data.activities;
+          for (let i = 0; i < this.activityList.length; i++) {
+            this.activityList[i].content = null;
+          }
+        })
+        .catch(this.$utils.handleHttpException);
     },
     expandItem(index) {
       if (index === "" || this.activityList[index].content != null) {
@@ -102,9 +104,9 @@ export default {
       this.$apis
         .getActivityContent(this.activityList[index].id)
         .then((response) => {
-          // TODO: Error Handler
           this.activityList[index].content = response.data.content;
-        });
+        })
+        .catch(this.$utils.handleHttpException);
     },
     interactActivity(index, operator) {
       console.log(
@@ -114,9 +116,14 @@ export default {
         .updateActivityJoining(this.activityList[index].id, operator)
         // eslint-disable-next-line no-unused-vars
         .then((response) => {
-          // TODO: Error Handler
           this.updateList();
-        });
+          this.$utils.popupMessage(
+            "success",
+            "操作成功",
+            `成功${operator == "join" ? "参加" : "退出"}活动`
+          );
+        })
+        .catch(this.$utils.handleHttpException);
     },
   },
 };
