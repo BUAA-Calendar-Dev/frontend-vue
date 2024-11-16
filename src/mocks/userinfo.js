@@ -2,6 +2,12 @@ import mockjs from "mockjs";
 
 var data = {
   1: {
+    username: "Alice",
+    email: "alice@buaa.edu.cn",
+    phone: "13123456789",
+    avatar: mockjs.Random.image("200x200"),
+  },
+  2: {
     username: "Bob",
     email: "bob@buaa.edu.cn",
     phone: "13123456789",

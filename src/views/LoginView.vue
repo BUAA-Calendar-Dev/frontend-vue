@@ -112,8 +112,23 @@ export default {
       this.$apis
         .login(this.loginForm.username, this.loginForm.password, role)
         .then((response) => {
-          if (response.data.code != 0) {
-            return; // TODO: Login Failed
+          if (response.data.code == 101) {
+            this.$utils.popupMessage(
+              "error",
+              "登录失败",
+              "用户名不存在或密码错误",
+              5000
+            );
+            return;
+          }
+          if (response.data.code == 102) {
+            this.$utils.popupMessage(
+              "error",
+              "登录失败",
+              "用户角色错误！",
+              5000
+            );
+            return;
           }
           this.$var.auth.login(
             response.data.token,
