@@ -2,7 +2,7 @@ import { getHelloWorld } from "@/apis/demo";
 import { getMessageList, setReadMessage } from "@/apis/message-receiver";
 import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
-import { login } from "@/apis/authentic";
+import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
 import {
   getActivityList,
@@ -47,6 +47,11 @@ export default new (class {
      * post '/api/user/login'
      */
     this.login = login;
+
+    /**
+     * post '/api/user/register'
+     */
+    this.register = register;
 
     /**
      * get '/api/user/{id}/info'

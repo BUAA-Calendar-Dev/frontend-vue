@@ -176,7 +176,7 @@ export default {
     const validatePassword = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请再次输入密码"));
-      } else if (value !== this.registerForm.password) {
+      } else if (value !== this.formData.password) {
         callback(new Error("两次输入密码不一致"));
       } else {
         callback();
@@ -246,6 +246,8 @@ export default {
   methods: {
     gotoRegister(mode) {
       this.mode = mode ? "register" : "login";
+      this.formData.password = "";
+      this.formData.confirmPassword = "";
     },
     register(role) {
       this.$refs.registerForm.validate((valid) => {
@@ -256,6 +258,30 @@ export default {
         if (role !== "student") {
           this.$utils.popupMessage("error", "注册失败", "非法的用户角色！");
         }
+        this.$apis
+          .register(this.formData.username, this.formData.password, "student", {
+            email: this.formData.email,
+            phone: this.formData.phone,
+          })
+          .then((response) => {
+            if (response.data.code == 103) {
+              this.$utils.popupMessage(
+                "error",
+                "注册失败",
+                "用户名被占用",
+                5000
+              );
+              return;
+            } else {
+              this.$utils.popupMessage(
+                "success",
+                "注册成功",
+                "欢迎使用 BUAA Calendar！"
+              );
+              this.gotoRegister(false);
+            }
+          })
+          .catch(this.$utils.handleHttpException);
       });
     },
     login(role) {
@@ -291,7 +317,8 @@ export default {
               response.data.user_id
             );
             this.$router.push({ path: "/home" });
-          });
+          })
+          .catch(this.$utils.handleHttpException);
       });
     },
   },
