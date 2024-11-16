@@ -2,7 +2,7 @@ import CryptoJS from "crypto-js";
 import axios from "axios";
 
 export function login(username, raw_password, login_as) {
-  return axios.post("/api/user/login", {
+  return axios.post(process.env.VUE_APP_ROOT_URL + "/api/user/login", {
     username: username,
     password: CryptoJS.SHA1(
       raw_password + CryptoJS.SHA1(raw_password) + raw_password

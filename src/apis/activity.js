@@ -1,13 +1,15 @@
 import axios from "axios";
 
 export function getActivityList() {
-  return axios.get("/api/activity/public");
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/activity/public");
 }
 
 export function getActivityContent(id) {
-  return axios.get(`/api/activity/${id}/detail`);
+  return axios.get(process.env.VUE_APP_ROOT_URL + `/api/activity/${id}/detail`);
 }
 
 export function updateActivityJoining(id, operator) {
-  return axios.post(`/api/activity/${id}/${operator}`);
+  return axios.post(
+    process.env.VUE_APP_ROOT_URL + `/api/activity/${id}/${operator}`
+  );
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
 
 export function getHelloWorld() {
-  return axios.get("/api/hello-world");
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/hello-world");
 }
