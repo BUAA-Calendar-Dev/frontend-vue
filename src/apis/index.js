@@ -4,6 +4,7 @@ import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
+import { getClassList } from "@/apis/class";
 import {
   getActivityList,
   getActivityContent,
@@ -81,5 +82,10 @@ export default new (class {
      * `operator` shall be 'exit' or 'join'
      */
     this.updateActivityJoining = updateActivityJoining;
+
+    /**
+     * get '/api/class'
+     */
+    this.getClassList = getClassList;
   }
 })();

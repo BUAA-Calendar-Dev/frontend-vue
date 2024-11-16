@@ -24,9 +24,54 @@
           </el-col>
         </el-row>
       </el-header>
-      <el-row>
-        <el-col :span="12" v-for="(item, index) in classList" :key="index">
-          <el-card class="class-card">AAA</el-card>
+      <el-row gutter="10">
+        <el-col
+          :span="12"
+          v-for="(item, index) in classList"
+          :key="index"
+          style="margin-bottom: 15px"
+        >
+          <el-card class="class-card">
+            <h2 style="text-align: left">{{ item.name }}</h2>
+            <div style="color: gray; text-align: left">
+              班级共有 {{ item.count }} 位学生
+            </div>
+            <div style="color: gray; text-align: left">班级教师：</div>
+            <div
+              style="
+                color: gray;
+                text-align: left;
+                margin-top: 3px;
+                font-weight: bold;
+              "
+            >
+              <span
+                style="color: gray; text-align: left; margin-right: 3px"
+                v-for="(itemTeacher, index) in item.teacher"
+                :key="index"
+              >
+                {{ itemTeacher }};
+              </span>
+            </div>
+            <div style="text-align: right">
+              <el-button
+                v-if="$var.auth.role == 'student'"
+                type="primary"
+                @click="updateClassDDLList(item.id)"
+              >
+                查看班级任务
+              </el-button>
+              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
+                管理班级
+              </el-button>
+              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
+                布置班级任务
+              </el-button>
+              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
+                发布班级消息
+              </el-button>
+            </div>
+          </el-card>
         </el-col>
       </el-row>
     </el-container>
@@ -82,8 +127,25 @@ export default {
   name: "ClassView",
   data() {
     return {
-      classList: [1, 2, 3],
+      classList: [],
+      currentClassDDLList: [],
     };
+  },
+  methods: {
+    updateClassList() {
+      this.$apis
+        .getClassList()
+        .then((response) => {
+          this.classList = response.data.class;
+          console.log(this.classList);
+        })
+        .catch(this.$utils.handleHttpException);
+    },
+    // eslint-disable-next-line no-unused-vars
+    updateClassDDLList(id) {},
+  },
+  mounted() {
+    this.updateClassList();
   },
 };
 </script>
