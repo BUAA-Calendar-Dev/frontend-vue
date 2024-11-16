@@ -302,7 +302,7 @@ export default {
       this.$router.push({ path: "/user" });
     },
     goToClass() {
-      this.$router.push({ path: "/class" });
+      this.$router.push({ path: "/class/view" });
     },
     goToTags() {
       this.$router.push({ path: "/tags" });

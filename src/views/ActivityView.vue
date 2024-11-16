@@ -4,7 +4,7 @@
       <el-menu :default-active="'1'">
         <el-menu-item index="0" @click="this.$router.push({ path: '/home' })">
           <DArrowLeft class="siderbar-icon" />
-          返回上页
+          返回主页
         </el-menu-item>
         <el-menu-item
           index="1"

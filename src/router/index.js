@@ -22,6 +22,11 @@ const routes = [
     component: () => import("../views/AdminView.vue"),
   },
   {
+    path: "/class/view",
+    name: "list-class",
+    component: () => import("../views/ClassView.vue"),
+  },
+  {
     path: "/class/manager",
     name: "manager-class",
     component: () => import("../views/ClassManagerView.vue"),
