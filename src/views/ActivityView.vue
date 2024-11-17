@@ -2,20 +2,20 @@
   <div class="activity-view">
     <el-container>
       <el-menu :default-active="'1'">
-        <el-menu-item index="0" @click="this.$router.push({ path: '/home' })">
+        <el-menu-item index="0" @click="$router.push({ path: '/home' })">
           <DArrowLeft class="siderbar-icon" />
           返回主页
         </el-menu-item>
         <el-menu-item
           index="1"
-          @click="this.$router.push({ path: '/activity/school' })"
+          @click="$router.push({ path: '/activity/school' })"
         >
           <Grid class="siderbar-icon" />
           全校活动
         </el-menu-item>
         <el-menu-item
           index="2"
-          @click="this.$router.push({ path: '/activity/picked' })"
+          @click="$router.push({ path: '/activity/picked' })"
         >
           <StarFilled class="siderbar-icon" />
           已选活动

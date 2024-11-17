@@ -2,20 +2,20 @@
   <div class="user-info">
     <el-container>
       <el-menu :default-active="'1'">
-        <el-menu-item index="0" @click="this.$router.push({ path: '/home' })">
+        <el-menu-item index="0" @click="$router.push({ path: '/home' })">
           <DArrowLeft class="siderbar-icon" />
           返回主页
         </el-menu-item>
         <el-menu-item
           index="1"
-          @click="this.$router.push({ path: '/user/profile' })"
+          @click="$router.push({ path: '/user/profile' })"
         >
           <Postcard class="siderbar-icon" />
           基本信息
         </el-menu-item>
         <el-menu-item
           index="2"
-          @click="this.$router.push({ path: '/user/preference' })"
+          @click="$router.push({ path: '/user/preference' })"
         >
           <Setting class="siderbar-icon" />
           偏好设置

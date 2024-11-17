@@ -4,10 +4,7 @@
       <el-header>
         <el-row>
           <el-col :span="8">
-            <div
-              class="fake-button"
-              @click="this.$router.push({ path: '/home' })"
-            >
+            <div class="fake-button" @click="$router.push({ path: '/home' })">
               <DArrowLeft class="siderbar-icon" />
               返回主页
             </div>
@@ -16,7 +13,7 @@
           <el-col :span="8">
             <div
               class="fake-button align-right"
-              @click="this.$router.push({ path: '/user' })"
+              @click="$router.push({ path: '/user' })"
             >
               用户信息
               <User class="siderbar-icon-right" />
