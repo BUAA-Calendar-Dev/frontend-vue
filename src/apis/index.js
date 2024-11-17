@@ -13,8 +13,34 @@ import {
   updateActivityJoining,
 } from "@/apis/activity";
 
+import axios from "axios";
+
 export default new (class {
   constructor() {
+    if (process.env.VUE_APP_ROOT_URL != "") {
+      axios.defaults.withCredentials = true;
+      axios
+        .get(process.env.VUE_APP_ROOT_URL + "/api/token/")
+        .then((response) => {
+          let csrf_token = response.data.token;
+          window.sessionStorage.setItem("csrf_token", csrf_token);
+        });
+
+      axios.interceptors.request.use(
+        function (config) {
+          let token = document.cookie;
+          if (token && config.method == "post") {
+            config.headers["X-CSRFToken"] =
+              window.sessionStorage.getItem("csrf_token");
+          }
+          return config;
+        },
+        function (error) {
+          return Promise.reject(error);
+        }
+      );
+    }
+
     /**
      * 一个请求的 Demo，返回一小段信息
      */
