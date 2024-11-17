@@ -27,3 +27,35 @@ mockjs.mock("/api/tags", "get", () => {
     tags: data,
   };
 });
+
+const urlDelete = RegExp("/api/tag/(\\d+)");
+
+mockjs.mock(urlDelete, "delete", (options) => {
+  const urlParams = options.url.match(urlDelete);
+  if (urlParams) {
+    const id = urlParams[1];
+    data = data.filter((item) => item.id != id);
+  }
+  return {
+    code: 0,
+  };
+});
+
+const urlModify = RegExp("/api/tag/(\\d+)/modify");
+
+mockjs.mock(urlModify, "post", (options) => {
+  const urlParams = options.url.match(urlModify);
+  const body = JSON.parse(options.body);
+  if (urlParams) {
+    const id = urlParams[1];
+    for (let index = 0; index < data.length; index++) {
+      if (data[index].id == id) {
+        data[index].title = body.title;
+        data[index].color = body.color;
+      }
+    }
+  }
+  return {
+    code: 0,
+  };
+});
