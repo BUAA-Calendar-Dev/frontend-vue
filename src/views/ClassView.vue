@@ -75,6 +75,49 @@
         </el-col>
       </el-row>
     </el-container>
+    <el-dialog v-model="showDDLList" title="班级任务列表" width="800">
+      <el-table :data="currentDDLList" style="width: 100%" align="center">
+        <el-table-column
+          property="task-name"
+          label="名称"
+          width="150"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          property="task-time"
+          label="DDL"
+          width="300"
+          show-overflow-tooltip
+        >
+          <template #default="scope">
+            <div>
+              {{
+                $utils.formatTimestamp(
+                  scope.row["task-time"],
+                  $var.timeFormatter
+                )
+              }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          property="task-time"
+          label="完成情况"
+          width="300"
+          show-overflow-tooltip
+        >
+          <template #default="scope">
+            <el-progress
+              :percentage="scope.row['task-percent']"
+              :stroke-width="15"
+              striped
+              striped-flow
+              :duration="10"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -123,12 +166,15 @@ import { DArrowLeft, User } from "@element-plus/icons-vue";
 </script>
 
 <script>
+import { ElMessageBox } from "element-plus";
+
 export default {
   name: "ClassView",
   data() {
     return {
       classList: [],
-      currentClassDDLList: [],
+      currentDDLList: [],
+      showDDLList: false,
     };
   },
   methods: {
@@ -141,10 +187,24 @@ export default {
         })
         .catch(this.$utils.handleHttpException);
     },
-    // eslint-disable-next-line no-unused-vars
-    updateClassDDLList(id) {},
+    updateClassDDLList(id) {
+      this.currentDDLList = [];
+      this.$apis
+        .getTaskList()
+        .then((response) => {
+          this.currentDDLList = response.data.tasks.filter(
+            (item) => item["class-id"] == id
+          );
+        })
+        .catch(this.$utils.handleHttpException);
+      this.showDDLList = true;
+    },
   },
   mounted() {
+    if (!this.$var.auth.isValid()) {
+      ElMessageBox.alert("登录失效！", { type: "warning" });
+      this.$router.push({ path: "/" });
+    }
     this.updateClassList();
   },
 };

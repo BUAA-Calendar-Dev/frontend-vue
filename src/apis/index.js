@@ -5,6 +5,7 @@ import { getEvent, createEvent } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
 import { getClassList } from "@/apis/class";
+import { getTaskList } from "@/apis/tasks";
 import {
   getActivityList,
   getActivityContent,
@@ -87,5 +88,10 @@ export default new (class {
      * get '/api/class'
      */
     this.getClassList = getClassList;
+
+    /**
+     * get '/api/tasks'
+     */
+    this.getTaskList = getTaskList;
   }
 })();
