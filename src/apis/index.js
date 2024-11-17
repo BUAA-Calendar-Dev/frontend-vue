@@ -6,6 +6,7 @@ import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
 import { getClassList } from "@/apis/class";
 import { getTaskList } from "@/apis/tasks";
+import { getTagList } from "@/apis/tags";
 import {
   getActivityList,
   getActivityContent,
@@ -93,5 +94,10 @@ export default new (class {
      * get '/api/tasks'
      */
     this.getTaskList = getTaskList;
+
+    /**
+     * get 'api/tags'
+     */
+    this.getTagList = getTagList;
   }
 })();

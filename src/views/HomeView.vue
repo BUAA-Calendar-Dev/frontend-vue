@@ -50,7 +50,7 @@
           <!-- Tag + -->
           <el-row justify="center" style="margin-top: 20px">
             <el-col :span="18">
-              <el-link type="primary" @click="goToTags">Tag +</el-link>
+              <el-link type="primary" @click="goToTags">任务标签</el-link>
             </el-col>
           </el-row>
 
@@ -209,6 +209,10 @@
     </template>
     <MessageList :messages="messageList" :update="updateMessage" />
   </el-drawer>
+  <!-- Tags Dialog -->
+  <el-dialog v-model="tagDialogOpen" title="任务标签" width="400px">
+    <TagDialogInner />
+  </el-dialog>
 </template>
 
 <script setup>
@@ -219,6 +223,7 @@ import "vue-cal/dist/vuecal.css"; // 导入样式
 
 <script>
 import MessageList from "@/components/MessageList.vue";
+import TagDialogInner from "@/components/TagDialogInner.vue";
 import { ElMessageBox } from "element-plus";
 
 export default {
@@ -242,6 +247,7 @@ export default {
       eventStart: "",
       eventEnd: "",
       eventContent: "",
+      tagDialogOpen: false,
     };
   },
   mounted() {
@@ -305,7 +311,7 @@ export default {
       this.$router.push({ path: "/class/view" });
     },
     goToTags() {
-      this.$router.push({ path: "/tags" });
+      this.tagDialogOpen = true;
     },
     goToActivities() {
       this.$router.push({ path: "/activity" });

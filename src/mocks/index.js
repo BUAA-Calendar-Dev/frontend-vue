@@ -7,3 +7,4 @@ import "@/mocks/userinfo";
 import "@/mocks/activity";
 import "@/mocks/class";
 import "@/mocks/tasks";
+import "@/mocks/tags";
