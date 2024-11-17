@@ -3,7 +3,22 @@
     <div class="login-sidebox">
       <div class="login-description">
         <h1 style="text-align: left; margin-left: 20px">BUAA Calendar</h1>
-        <p style="text-align: left; margin-left: 20px">描述</p>
+        <p style="text-align: left; margin-left: 20px">
+          适合于<b>北航er</b>体质的日程管理软件
+        </p>
+        <el-carousel
+          trigger="click"
+          height="200px"
+          indicator-position="outside"
+          style="margin-top: auto; margin-bottom: auto"
+        >
+          <el-carousel-item v-for="(item, index) in splash" :key="index">
+            <h4>{{ item.title }}</h4>
+            <p v-for="(content, index) in item.content" :key="index">
+              {{ content }}
+            </p>
+          </el-carousel-item>
+        </el-carousel>
       </div>
     </div>
     <div v-if="mode == 'login'" class="login-sideform">
@@ -241,6 +256,30 @@ export default {
           },
         ],
       },
+      splash: [
+        {
+          title: "清晰的日程展示",
+          content: [
+            "展示每日日程安排，按时间抽清晰呈现",
+            "可接收集体任务，亦可自定义日程",
+            "将活动纳入日程的范畴，提升日程管理效率",
+          ],
+        },
+        {
+          title: "作业、博雅同步跟踪",
+          content: [
+            "支持班级集体任务，支持全校公共活动",
+            "一键加入日程，不再错过任何一场精彩",
+          ],
+        },
+        {
+          title: "高度可定制，满足个性需求",
+          content: [
+            "自定义任务标签，提供多样的任务分类",
+            "自定义提醒时间，适合不同的个性习惯",
+          ],
+        },
+      ],
     };
   },
   methods: {
