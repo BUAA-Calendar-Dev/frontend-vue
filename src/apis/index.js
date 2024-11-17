@@ -28,11 +28,16 @@ export default new (class {
 
       axios.interceptors.request.use(
         function (config) {
-          let token = document.cookie;
-          if (token && config.method == "post") {
-            config.headers["X-CSRFToken"] =
-              window.sessionStorage.getItem("csrf_token");
+          const csrf_token = window.sessionStorage.getItem("csrf_token");
+          if (csrf_token && config.method == "post") {
+            config.headers["X-CSRFToken"] = csrf_token;
           }
+
+          const user_token = window.sessionStorage.getItem("user_token");
+          if (user_token) {
+            config.headers["Authorization"] = "JWT " + user_token;
+          }
+
           return config;
         },
         function (error) {

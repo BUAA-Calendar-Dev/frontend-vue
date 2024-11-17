@@ -9,6 +9,7 @@ export class Authentic {
     this.token = token;
     this.role = role;
     this.id = id;
+    window.sessionStorage.setItem("user_token", token);
   }
 
   /**
@@ -27,6 +28,7 @@ export class Authentic {
   invalidate() {
     this.token = null;
     this.role = "";
+    window.sessionStorage.setItem("user_token", "");
   }
 
   // If we want the store the login status in the local browser, localStorage can be used.
