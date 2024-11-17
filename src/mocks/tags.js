@@ -21,16 +21,16 @@ var data = [
   },
 ];
 
-mockjs.mock("/api/tags", "get", () => {
+mockjs.mock("/api/tag", "get", () => {
   return {
     code: 0,
     tags: data,
   };
 });
 
-const urlDelete = RegExp("/api/tag/(\\d+)");
+const urlDelete = RegExp("/api/tag/(\\d+)/delete");
 
-mockjs.mock(urlDelete, "delete", (options) => {
+mockjs.mock(urlDelete, "post", (options) => {
   const urlParams = options.url.match(urlDelete);
   if (urlParams) {
     const id = urlParams[1];

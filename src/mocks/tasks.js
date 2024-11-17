@@ -1,6 +1,6 @@
 import mockjs from "mockjs";
 
-mockjs.mock("/api/tasks", "get", () => {
+mockjs.mock("/api/task", "get", () => {
   return {
     code: 0,
     tasks: [

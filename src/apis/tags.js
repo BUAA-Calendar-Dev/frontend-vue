@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export function getTagList() {
-  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/tags");
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/tag");
 }
 
 export function modifyTag(id, title, color) {
@@ -12,7 +12,7 @@ export function modifyTag(id, title, color) {
 }
 
 export function deleteTag(id) {
-  return axios.delete(process.env.VUE_APP_ROOT_URL + `/api/tag/${id}`);
+  return axios.post(process.env.VUE_APP_ROOT_URL + `/api/tag/${id}/delete`);
 }
 
 export function newTag(title, color) {
