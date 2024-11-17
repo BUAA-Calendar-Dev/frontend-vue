@@ -24,6 +24,11 @@
       </div>
     </el-col>
   </el-row>
+  <el-row>
+    <el-col :span="6" :offset="18">
+      <el-button type="primary" @click="openNewTag">新增标签</el-button>
+    </el-col>
+  </el-row>
   <el-dialog v-model="modifyDialogOpen" title="修改任务标签" width="600">
     <span style="margin-right: 8px; width: 40px">标题</span>
     <el-input style="width: 240px" v-model="inputTitle"></el-input>
@@ -39,7 +44,12 @@
     <span style="width: 180px">{{ inputColor.toUpperCase() }}</span>
     <br />
     <br />
-    <el-button type="primary" @click="doTagModify">确认修改</el-button>
+    <el-button v-if="modifyType == 'modify'" type="primary" @click="doTagModify"
+      >确认修改</el-button
+    >
+    <el-button v-if="modifyType == 'new'" type="primary" @click="doTagNew"
+      >确认新建</el-button
+    >
   </el-dialog>
 </template>
 
@@ -101,6 +111,7 @@ export default {
       modifyDialogOpen: false,
       inputTitle: "",
       inputColor: "#000000",
+      modifyType: "modify",
     };
   },
   mounted() {
@@ -125,7 +136,7 @@ export default {
           } else {
             this.$utils.popupMessage(
               "error",
-              "修改失败",
+              "删除失败",
               `返回码：${response.data.code}，标签不存在或无法删除`,
               5000
             );
@@ -140,6 +151,13 @@ export default {
       this.inputColor = color;
       this.modifyingTagId = id;
       this.modifyDialogOpen = true;
+      this.modifyType = "modify";
+    },
+    openNewTag() {
+      this.inputTitle = "";
+      this.inputColor = "#000000";
+      this.modifyDialogOpen = true;
+      this.modifyType = "new";
     },
     doTagModify() {
       this.inputColor = this.inputColor.toLowerCase();
@@ -163,6 +181,29 @@ export default {
         })
         .catch(this.$utils.handleHttpException);
       this.modifyingTagId = -1;
+      this.modifyDialogOpen = false;
+    },
+    doTagNew() {
+      this.inputColor = this.inputColor.toLowerCase();
+      console.log(
+        `New Tag. Title: ${this.inputTitle}, Color: ${this.inputColor}`
+      );
+      this.$apis
+        .newTag(this.inputTitle, this.inputColor)
+        .then((response) => {
+          if (response.data.code == 0) {
+            this.$utils.popupMessage("success", "新增成功", "");
+          } else {
+            this.$utils.popupMessage(
+              "error",
+              "新增失败",
+              `返回码：${response.data.code}，未知错误`,
+              5000
+            );
+          }
+          this.updateTagList();
+        })
+        .catch(this.$utils.handleHttpException);
       this.modifyDialogOpen = false;
     },
     setNoClear() {

@@ -6,7 +6,7 @@ import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
 import { getClassList } from "@/apis/class";
 import { getTaskList } from "@/apis/tasks";
-import { getTagList, modifyTag, deleteTag } from "@/apis/tags";
+import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
 import {
   getActivityList,
   getActivityContent,
@@ -109,5 +109,10 @@ export default new (class {
      * delete '/api/tag/{id}'
      */
     this.deleteTag = deleteTag;
+
+    /**
+     * put '/api/tag'
+     */
+    this.newTag = newTag;
   }
 })();

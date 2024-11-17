@@ -59,3 +59,18 @@ mockjs.mock(urlModify, "post", (options) => {
     code: 0,
   };
 });
+
+mockjs.mock("/api/tag", "put", (options) => {
+  const body = JSON.parse(options.body);
+  const id = 1 + data.slice(-1)[0].id;
+  data.push({
+    id: id,
+    title: body.title,
+    color: body.color,
+    fixed: false,
+  });
+  return {
+    code: 0,
+    id: id,
+  };
+});
