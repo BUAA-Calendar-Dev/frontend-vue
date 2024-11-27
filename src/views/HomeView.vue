@@ -21,7 +21,9 @@
           <!-- 活动 -->
           <el-row justify="center" style="margin-top: 20px">
             <el-col :span="18">
-              <el-link type="primary" @click="goToActivities">创建提醒</el-link>
+              <el-link type="primary" @click="goToActivities">
+                创建班级提醒
+              </el-link>
             </el-col>
           </el-row>
 
@@ -213,6 +215,58 @@
   <el-dialog v-model="tagDialogOpen" title="任务标签" width="400px">
     <TagDialogInner />
   </el-dialog>
+  <el-dialog
+    title="创建班级提醒"
+    v-model="taskDialogVisible"
+    width="500px"
+    @close="resetTaskForm"
+  >
+    <el-form :model="taskForm" label-width="100px">
+      <el-form-item label="选择班级" required>
+        <el-select v-model="taskForm.classId" placeholder="请选择班级">
+          <el-option
+            v-for="item in classList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="提醒名称" required>
+        <el-input v-model="taskForm.name" placeholder="请输入提醒名称" />
+      </el-form-item>
+      <el-form-item label="提醒内容" required>
+        <el-input
+          v-model="taskForm.content"
+          type="textarea"
+          rows="3"
+          placeholder="请输入提醒内容"
+        />
+      </el-form-item>
+      <el-form-item label="开始时间" required>
+        <el-date-picker
+          v-model="taskForm.startTime"
+          type="datetime"
+          placeholder="选择开始时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+      <el-form-item label="结束时间" required>
+        <el-date-picker
+          v-model="taskForm.endTime"
+          type="datetime"
+          placeholder="选择结束时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="taskDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="createTask">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -248,6 +302,15 @@ export default {
       eventEnd: "",
       eventContent: "",
       tagDialogOpen: false,
+      taskDialogVisible: false,
+      taskForm: {
+        name: "",
+        content: "",
+        startTime: "",
+        endTime: "",
+        classId: "", // 选中的班级ID
+      },
+      classList: [], // 班级列表
     };
   },
   mounted() {
@@ -315,7 +378,8 @@ export default {
       this.tagDialogOpen = true;
     },
     goToActivities() {
-      this.$router.push({ path: "/activity" });
+      this.taskDialogVisible = true;
+      this.getClassList();
     },
     /**
      * @deprecated use `goToActivities` instead
@@ -363,6 +427,56 @@ export default {
         return;
       }
       this.message_drawer = true;
+    },
+    // 获取班级列表
+    getClassList() {
+      this.$apis.getClassList().then((response) => {
+        this.classList = response.data.class;
+      });
+    },
+    // 创建任务
+    createTask() {
+      if (!this.taskForm.classId) {
+        this.$message.error("请选择班级");
+        return;
+      }
+
+      if (
+        !this.taskForm.name ||
+        !this.taskForm.content ||
+        !this.taskForm.startTime ||
+        !this.taskForm.endTime
+      ) {
+        this.$message.error("请填写完整信息");
+        return;
+      }
+
+      this.$apis
+        .createTask({
+          name: this.taskForm.name,
+          content: this.taskForm.content,
+          startTime: this.taskForm.startTime,
+          endTime: this.taskForm.endTime,
+          classId: this.taskForm.classId,
+        })
+        .then(() => {
+          this.$message.success("创建成功");
+          this.taskDialogVisible = false;
+          this.resetTaskForm();
+        })
+        .catch((error) => {
+          this.$message.error("创建失败：" + error.message);
+        });
+    },
+    // 重置表单
+    resetTaskForm() {
+      this.taskForm = {
+        name: "",
+        content: "",
+        startTime: "",
+        endTime: "",
+        classId: "",
+      };
     },
   },
 };
