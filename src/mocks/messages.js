@@ -7,7 +7,7 @@ var data = {
       id: 1,
       title: "msg1",
       from: "admin",
-      time: 1728054803,
+      time: "2024-11-22 11:22",
       content: "This is message 1",
       unread: true,
     },
@@ -15,7 +15,7 @@ var data = {
       id: 2,
       title: "msg2",
       from: "admin",
-      time: 1728054803,
+      time: "2024-11-22 22:33",
       content: "This is message 2",
       unread: false,
     },
@@ -23,14 +23,14 @@ var data = {
       id: 3,
       title: "msg3",
       from: "admin",
-      time: 1728054804,
+      time: "2024-11-22 22:22",
       content: "This is message 3",
       unread: true,
     },
   ],
 };
 
-mockjs.mock("/api/message", "get", data);
+mockjs.mock("/api/message/info", "get", data);
 
 const read_message_pat = RegExp("/api/message/(\\d+)/read");
 
