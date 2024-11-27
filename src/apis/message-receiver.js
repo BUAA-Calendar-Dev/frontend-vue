@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export function getMessageList() {
-  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/message");
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/message/info");
 }
 
 export function setReadMessage(id) {

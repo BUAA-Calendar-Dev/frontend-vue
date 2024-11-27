@@ -260,6 +260,7 @@ export default {
     }
     this.updateUser();
     this.updateSpecialHours();
+    this.updateEvents();
   },
   methods: {
     customEventCreation() {
