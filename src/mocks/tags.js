@@ -28,7 +28,7 @@ mockjs.mock("/api/tag", "get", () => {
   };
 });
 
-const urlDelete = RegExp("/api/tag/(\\d+)/delete");
+const urlDelete = RegExp("^/api/tag/(\\d+)/delete");
 
 mockjs.mock(urlDelete, "post", (options) => {
   const urlParams = options.url.match(urlDelete);
@@ -41,7 +41,7 @@ mockjs.mock(urlDelete, "post", (options) => {
   };
 });
 
-const urlModify = RegExp("/api/tag/(\\d+)/modify");
+const urlModify = RegExp("^/api/tag/(\\d+)/modify");
 
 mockjs.mock(urlModify, "post", (options) => {
   const urlParams = options.url.match(urlModify);

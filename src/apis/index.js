@@ -12,7 +12,7 @@ import {
   getActivityContent,
   updateActivityJoining,
 } from "@/apis/activity";
-
+import { createTask } from "@/apis/tasks";
 import axios from "axios";
 
 export default new (class {
@@ -145,5 +145,10 @@ export default new (class {
      * put '/api/tag'
      */
     this.newTag = newTag;
+
+    /**
+     * post '/api/task/create'
+     */
+    this.createTask = createTask;
   }
 })();

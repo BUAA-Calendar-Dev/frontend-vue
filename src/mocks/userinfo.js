@@ -15,7 +15,7 @@ var data = {
   },
 };
 
-const get_user_info_pat = RegExp("/api/user/(\\d+)/info");
+const get_user_info_pat = RegExp("^/api/user/(\\d+)/info");
 
 mockjs.mock(get_user_info_pat, "get", (options) => {
   const urlParams = options.url.match(get_user_info_pat);
