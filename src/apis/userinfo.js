@@ -1,7 +1,6 @@
 import axios from "axios";
 
 export function getUserInfo(id) {
-  console.log(process.env.VUE_APP_ROOT_URL + `/api/user/${id}/info`);
   return axios.get(process.env.VUE_APP_ROOT_URL + `/api/user/${id}/info`);
 }
 

@@ -2,83 +2,130 @@
   <div class="calendar-view">
     <el-container>
       <!-- 左侧栏 -->
-      <el-aside width="400px" style="background-color: cyan">
-        <!-- 班级 -->
-        <span v-if="$var.auth.role == 'teacher'">
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToClass">班级</el-link>
-            </el-col>
-          </el-row>
+      <el-aside width="300px" class="app-aside">
+        <!-- 当显示任务列表时 -->
+        <div v-if="showTaskList">
+          <div class="aside-header">
+            <h2>任务列表</h2>
+            <el-button
+              @click="showTaskList = false"
+              type="primary"
+              size="small"
+              class="back-button"
+            >
+              返回
+            </el-button>
+          </div>
 
-          <!-- Tag + -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToTags">管理班级</el-link>
-            </el-col>
-          </el-row>
+          <!-- 任务列表 -->
+          <el-scrollbar height="calc(100vh - 100px)" class="task-scrollbar">
+            <el-row
+              v-for="task in taskList"
+              :key="task.id"
+              justify="center"
+              class="task-item"
+            >
+              <el-col :span="20">
+                <el-card shadow="hover" class="task-card">
+                  <template #header>
+                    <div class="task-header">
+                      <span>{{ task.name }}</span>
+                      <el-tag size="small" class="deadline-tag">
+                        {{ new Date(task.endTime).toLocaleDateString() }}
+                      </el-tag>
+                    </div>
+                  </template>
+                  <div class="task-content">
+                    <p>{{ task.content }}</p>
+                    <el-progress
+                      :percentage="
+                        calculateProgress(task.startTime, task.endTime)
+                      "
+                      :status="
+                        calculateProgress(task.startTime, task.endTime) >= 100
+                          ? 'success'
+                          : ''
+                      "
+                    />
+                    <div class="task-time">
+                      <span
+                        >开始:
+                        {{ new Date(task.startTime).toLocaleString() }}</span
+                      >
+                      <span
+                        >结束:
+                        {{ new Date(task.endTime).toLocaleString() }}</span
+                      >
+                    </div>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+          </el-scrollbar>
+        </div>
 
-          <!-- 活动 -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToActivities">
-                创建班级提醒
-              </el-link>
-            </el-col>
-          </el-row>
+        <!-- 原有的导航菜单，当不显示任务列表时显示 -->
+        <span v-else-if="$var.auth.role == 'teacher'">
+          <div class="aside-header">
+            <h2>教师菜单</h2>
+          </div>
+          <div class="menu-list">
+            <div class="menu-item" @click="goToClass">
+              <i class="el-icon-user-group"></i>
+              <span>班级</span>
+            </div>
 
-          <!-- 浏览全校活动 / DDL -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToSchoolActivities"
-                >DDL</el-link
-              >
-              <el-link
-                type="primary"
-                @click="goToDDL"
-                style="display: block; margin-top: 10px"
-                >已发布的DDL</el-link
-              >
-            </el-col>
-          </el-row>
+            <!-- Tag + -->
+            <div class="menu-item" @click="goToTags">
+              <i class="el-icon-collection-tag"></i>
+              <span>管理班级</span>
+            </div>
+
+            <!-- 活动 -->
+            <div class="menu-item" @click="goToActivities">
+              <i class="el-icon-bell"></i>
+              <span>创建班级提醒</span>
+            </div>
+
+            <!-- 浏览全校活动 / DDL -->
+            <div class="menu-item" @click="goToSchoolActivities">
+              <i class="el-icon-time"></i>
+              <span>DDL</span>
+            </div>
+            <div class="menu-item" @click="goToDDL">
+              <i class="el-icon-document"></i>
+              <span>已发布的DDL</span>
+            </div>
+          </div>
         </span>
-        <span v-if="$var.auth.role == 'student'">
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToClass">班级</el-link>
-            </el-col>
-          </el-row>
+        <span v-else-if="$var.auth.role == 'student'">
+          <div class="aside-header">
+            <h2>学生菜单</h2>
+          </div>
+          <div class="menu-list">
+            <div class="menu-item" @click="goToClass">
+              <i class="el-icon-user-group"></i>
+              <span>班级</span>
+            </div>
 
-          <!-- Tag + -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToTags">任务标签</el-link>
-            </el-col>
-          </el-row>
+            <!-- Tag + -->
+            <div class="menu-item" @click="goToTags">
+              <i class="el-icon-collection-tag"></i>
+              <span>任务标签</span>
+            </div>
 
-          <!-- 活动 -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToActivities">活动</el-link>
-            </el-col>
-          </el-row>
+            <!-- 活动 -->
+            <div class="menu-item" @click="goToActivities">
+              <i class="el-icon-bell"></i>
+              <span>活动</span>
+            </div>
 
-          <!-- TODO: Why seperate them from the items above? ---- sk -->
-          <!-- 浏览全校活动 / DDL -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <!-- Remove this item since we have a "活动" above -->
-              <!-- <el-link type="primary" @click="goToSchoolActivities"
-                >浏览全校活动</el-link
-              > -->
-              <el-link
-                type="primary"
-                @click="goToDDL"
-                style="display: block; margin-top: 10px"
-                >DDL</el-link
-              >
-            </el-col>
-          </el-row>
+            <!-- DDL -->
+            <div class="menu-item" @click="goToDDL">
+              <i class="el-icon-time"></i>
+              <span>DDL</span>
+            </div>
+          </div>
         </span>
       </el-aside>
       <el-container>
@@ -311,6 +358,8 @@ export default {
         classId: "", // 选中的班级ID
       },
       classList: [], // 班级列表
+      taskList: [], // 存储任务列表
+      showTaskList: false, // 控制任务列表的显示
     };
   },
   mounted() {
@@ -388,7 +437,13 @@ export default {
       this.$router.push({ path: "/school-activities" });
     },
     goToDDL() {
-      this.$router.push({ path: "/ddl" });
+      this.showTaskList = true;
+      this.getTaskList();
+    },
+    getTaskList() {
+      this.$apis.getTaskList().then((response) => {
+        this.taskList = response.data.tasks;
+      });
     },
     updateUser() {
       this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
@@ -478,11 +533,22 @@ export default {
         classId: "",
       };
     },
+    // 计算进度条百分比
+    calculateProgress(startTime, endTime) {
+      const start = new Date(startTime).getTime();
+      const end = new Date(endTime).getTime();
+      const now = new Date().getTime();
+
+      if (now < start) return 0;
+      if (now > end) return 100;
+
+      return Math.round(((now - start) / (end - start)) * 100);
+    },
   },
 };
 </script>
 
-<style scope>
+<style scoped>
 .calendar-view,
 .el-container,
 #app,
@@ -511,5 +577,180 @@ html {
 .doctor-2 {
   background-color: #f0f6ff;
   color: #689bee;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-content {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.task-time {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 12px;
+}
+
+.app-aside {
+  background-color: #fafafa;
+  border-right: 1px solid #eaeaea;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.back-button {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.task-scrollbar {
+  padding: 0 10px;
+}
+
+.task-item {
+  margin: 16px 0;
+}
+
+.task-card {
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  margin-bottom: 8px;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.deadline-tag {
+  background-color: #f6f8ff;
+  color: #409eff;
+  border: 1px solid #d9ecff;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.task-content {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 16px 0;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.el-progress {
+  margin: 16px 0;
+}
+
+.task-time {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.el-link {
+  font-size: 15px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.el-link:hover {
+  background-color: #ecf5ff;
+  color: #409eff;
+}
+
+:deep(.el-progress-bar__outer) {
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  height: 6px !important;
+}
+
+:deep(.el-progress-bar__inner) {
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.task-scrollbar :deep(.el-scrollbar__bar) {
+  width: 6px;
+}
+
+.task-scrollbar :deep(.el-scrollbar__thumb) {
+  background-color: #ccc;
+  opacity: 0.3;
+}
+
+.task-scrollbar :deep(.el-scrollbar__thumb:hover) {
+  opacity: 0.5;
+}
+
+.aside-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.aside-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+}
+
+.menu-list {
+  padding: 12px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #f0f6ff;
+}
+
+.menu-item i {
+  font-size: 18px;
+  margin-right: 12px;
+  color: #666;
+}
+
+.menu-item span {
+  font-size: 14px;
+  color: #333;
 }
 </style>
