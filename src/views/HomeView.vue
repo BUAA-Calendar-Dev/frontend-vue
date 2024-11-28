@@ -158,7 +158,13 @@
                     />
                   </el-tooltip>
                 </el-badge>
-                <el-button @click="customEventCreation" type="warning" round>
+                <el-button
+                  @click="customEventCreation"
+                  class="create-schedule-btn"
+                  type="primary"
+                  round
+                >
+                  <i class="el-icon-plus" style="margin-right: 4px" />
                   创建新日程
                 </el-button>
               </span>
@@ -212,27 +218,38 @@
           <el-dialog
             title="创建新事件"
             v-model="eventDialogVisible"
-            width="400px"
+            width="500px"
             @close="resetDialogFields"
           >
-            <el-form>
+            <el-form :model="eventForm" label-width="100px">
               <el-form-item label="事件名称" required>
                 <el-input v-model="eventName" placeholder="请输入事件名称" />
               </el-form-item>
-              <el-form-item label="事件开始" required>
-                <el-input
+              <el-form-item label="开始时间" required>
+                <el-date-picker
                   v-model="eventStart"
-                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                  type="datetime"
+                  placeholder="选择开始时间"
+                  format="YYYY-MM-DD HH:mm"
+                  value-format="YYYY-MM-DD HH:mm"
                 />
               </el-form-item>
-              <el-form-item label="事件结束" required>
-                <el-input
+              <el-form-item label="结束时间" required>
+                <el-date-picker
                   v-model="eventEnd"
-                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                  type="datetime"
+                  placeholder="选择结束时间"
+                  format="YYYY-MM-DD HH:mm"
+                  value-format="YYYY-MM-DD HH:mm"
                 />
               </el-form-item>
               <el-form-item label="事件内容" required>
-                <el-input v-model="eventContent" placeholder="请输入事件内容" />
+                <el-input
+                  v-model="eventContent"
+                  type="textarea"
+                  rows="3"
+                  placeholder="请输入事件内容"
+                />
               </el-form-item>
             </el-form>
             <template #footer>
@@ -757,5 +774,46 @@ html {
 .menu-item span {
   font-size: 14px;
   color: #333;
+}
+
+.create-schedule-btn {
+  background: linear-gradient(45deg, #4caf50, #45a049);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
+.create-schedule-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  background: linear-gradient(45deg, #45a049, #4caf50);
+}
+
+.create-schedule-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 30px;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.el-date-picker) {
+  width: 100%;
+}
+
+:deep(.el-textarea__inner) {
+  min-height: 80px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 10px 30px 20px;
+  border-top: 1px solid #eee;
 }
 </style>
