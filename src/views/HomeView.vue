@@ -260,6 +260,7 @@
           <!-- 弹出的小窗 -->
           <el-dialog v-model="dialogVisible" title="日期详情">
             <span>您点击的日期是: {{ selectedDate }}</span>
+            <p>{{ greetingMessage }}</p>
             <template #footer>
               <el-button @click="dialogVisible = false">关闭</el-button>
             </template>
@@ -377,6 +378,7 @@ export default {
       classList: [], // 班级列表
       taskList: [], // 存储任务列表
       showTaskList: false, // 控制任务列表的显示
+      greetingMessage: "", // 添加问候信息的状态
     };
   },
   mounted() {
@@ -429,9 +431,29 @@ export default {
       this.$forceUpdate();
     },
     handleDateClick(date) {
-      console.log("日期点击事件触发: ", date); // 调试信息
-      this.selectedDate = date; // 获取点击的日期
-      this.dialogVisible = true; // 显示 dialog
+      console.log("日期点击事件触发: ", date);
+      this.selectedDate = date;
+      this.greetingMessage = this.generateGreeting(date); // 生成问候信息
+      this.dialogVisible = true;
+    },
+    generateGreeting(date) {
+      const hour = new Date(date).getHours();
+      let greeting = "祝你有美好的一天！";
+
+      if (hour < 12) {
+        greeting = "早上好！新的一天，新的开始！";
+      } else if (hour < 18) {
+        greeting = "下午好！继续加油！";
+      } else {
+        greeting = "晚上好！辛苦了一天，注意休息！";
+      }
+
+      const day = new Date(date).getDay();
+      if (day === 0 || day === 6) {
+        greeting += " 周末愉快！";
+      }
+
+      return greeting;
     },
     // 路由跳转方法,一些信息应该可以不跳转，直接就展示出来
     goToProfile() {
