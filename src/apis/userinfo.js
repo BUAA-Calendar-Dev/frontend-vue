@@ -10,3 +10,18 @@ export function setUserInfo(key, value) {
     JSON.stringify({ [key]: value })
   );
 }
+
+export function updateAvatar(file) {
+  const formData = new FormData();
+  formData.append("img", file);
+
+  return axios.post(
+    process.env.VUE_APP_ROOT_URL + "/api/user/avatar",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+}
