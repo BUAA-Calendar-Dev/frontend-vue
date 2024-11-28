@@ -427,8 +427,13 @@ export default {
       this.tagDialogOpen = true;
     },
     goToActivities() {
-      this.taskDialogVisible = true;
-      this.getClassList();
+      // 教师创建活动
+      if (this.$var.auth.role === "teacher") {
+        this.taskDialogVisible = true;
+        this.getClassList();
+      } else {
+        this.$router.push({ path: "/activity" });
+      }
     },
     /**
      * @deprecated use `goToActivities` instead
