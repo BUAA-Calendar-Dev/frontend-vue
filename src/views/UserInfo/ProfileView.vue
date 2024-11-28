@@ -110,6 +110,13 @@
         :rules="passwordRules"
         ref="passwordFormRef"
       >
+        <el-form-item label="旧密码" prop="old">
+          <el-input
+            v-model="password.old"
+            show-password
+            placeholder="请输入旧密码"
+          />
+        </el-form-item>
         <el-form-item label="新密码" prop="origin">
           <el-input
             v-model="password.origin"
@@ -419,22 +426,28 @@
 
 <script setup>
 import { Edit, Check, Upload } from "@element-plus/icons-vue";
-import { ref } from "vue";
+import { ref, getCurrentInstance } from "vue";
+
+// 获取当前组件实例以访问全局属性
+const { proxy: vm } = getCurrentInstance();
 
 const fileInput = ref(null);
 const passwordFormRef = ref(null);
 const isSubmitting = ref(false);
+const inModifyPassword = ref(false);
 
 const triggerUpload = () => {
   fileInput.value.click();
 };
 
 const password = ref({
+  old: "",
   origin: "",
   confirm: "",
 });
 
 const passwordRules = {
+  old: [{ required: true, message: "请输入旧密码", trigger: "blur" }],
   origin: [
     { required: true, message: "请输入新密码", trigger: "blur" },
     { min: 6, message: "密码长度不能小于6位", trigger: "blur" },
@@ -452,6 +465,41 @@ const passwordRules = {
       trigger: "blur",
     },
   ],
+};
+
+const cancelModifyPassword = () => {
+  inModifyPassword.value = false;
+  password.value.old = "";
+  password.value.origin = "";
+  password.value.confirm = "";
+  if (passwordFormRef.value) {
+    passwordFormRef.value.resetFields();
+  }
+};
+
+const confirmModifyPassword = async () => {
+  if (!passwordFormRef.value) return;
+
+  try {
+    await passwordFormRef.value.validate();
+    isSubmitting.value = true;
+
+    await vm.$apis.changePassword({
+      "old-password": password.value.old,
+      "new-password": password.value.origin,
+    });
+
+    vm.$message.success("密码修改成功");
+    cancelModifyPassword();
+  } catch (error) {
+    if (error.response?.data?.message) {
+      vm.$message.error(error.response.data.message);
+    } else {
+      vm.$message.error("修改密码失败，请稍后重试");
+    }
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>
 
@@ -491,7 +539,6 @@ export default {
           inModify: false,
         },
       },
-      inModifyPassword: false,
     };
   },
   mounted() {
@@ -537,34 +584,6 @@ export default {
         this.listed.motto.content = response.data.motto || "";
       } catch (error) {
         this.$utils.handleHttpException(error);
-      }
-    },
-    cancelModifyPassword() {
-      this.inModifyPassword = false;
-      this.password.origin = "";
-      this.password.confirm = "";
-      if (this.passwordFormRef) {
-        this.passwordFormRef.resetFields();
-      }
-    },
-    async confirmModifyPassword() {
-      if (!this.passwordFormRef) return;
-
-      try {
-        await this.passwordFormRef.validate();
-        this.isSubmitting = true;
-
-        // TODO: 实现修改密码的API调用
-        // await this.$apis.modifyPassword(this.password.origin);
-
-        this.$message.success("密码修改成功");
-        this.cancelModifyPassword();
-      } catch (error) {
-        if (error.message) {
-          this.$message.error(error.message);
-        }
-      } finally {
-        this.isSubmitting = false;
       }
     },
     startEditNickname() {

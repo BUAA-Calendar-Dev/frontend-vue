@@ -3,7 +3,12 @@ import { getMessageList, setReadMessage } from "@/apis/message-receiver";
 import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
-import { getUserInfo, setUserInfo, updateAvatar } from "@/apis/userinfo";
+import {
+  getUserInfo,
+  setUserInfo,
+  updateAvatar,
+  changePassword,
+} from "@/apis/userinfo";
 import { getClassList } from "@/apis/class";
 import { getTaskList } from "@/apis/tasks";
 import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
@@ -158,5 +163,10 @@ export default new (class {
      * post '/api/user/avatar'
      */
     this.updateAvatar = updateAvatar;
+
+    /**
+     * post '/api/user/reset_password'
+     */
+    this.changePassword = changePassword;
   }
 })();
