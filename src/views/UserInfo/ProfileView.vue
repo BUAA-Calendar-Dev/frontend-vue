@@ -4,7 +4,9 @@
       <div class="avatar-wrapper" @click="triggerUpload">
         <el-image :src="avatar" class="avatar-image" :fit="'cover'" />
         <div class="avatar-overlay">
-          <el-icon class="upload-icon"><Upload /></el-icon>
+          <el-icon class="upload-icon">
+            <Upload />
+          </el-icon>
           <span>更换头像</span>
         </div>
       </div>
@@ -15,10 +17,37 @@
         accept="image/*"
         @change="handleAvatarUpload"
       />
-      <h2 class="username">{{ username }}</h2>
+      <div class="nickname-section">
+        <template v-if="isEditingNickname">
+          <el-input
+            v-model="nickname"
+            size="large"
+            placeholder="请输入昵称"
+            class="nickname-input"
+          >
+            <template #append>
+              <el-button @click="saveNickname" :icon="Check" />
+            </template>
+          </el-input>
+        </template>
+        <template v-else>
+          <h2 class="nickname" @click="startEditNickname">
+            {{ nickname }}
+            <el-icon class="edit-icon">
+              <Edit />
+            </el-icon>
+          </h2>
+        </template>
+      </div>
     </div>
 
     <el-card class="info-card" shadow="hover">
+      <div class="info-item">
+        <div class="info-label">用户名</div>
+        <div class="info-content">
+          <span class="username-display">{{ username }}</span>
+        </div>
+      </div>
       <div v-for="(value, key) in listed" :key="key" class="info-item">
         <div class="info-label">
           {{ value.title }}
@@ -114,20 +143,29 @@
 
 <style scoped>
 .profile-container {
+  width: 90%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2vh 0 4vh;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2vh;
 }
 
 .avatar-section {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 1vh;
+  padding-top: 2vh;
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 15vh;
+  height: 15vh;
+  min-width: 100px;
+  min-height: 100px;
   margin: 0 auto;
   border-radius: 50%;
   overflow: hidden;
@@ -166,20 +204,67 @@
   margin-bottom: 5px;
 }
 
-.username {
-  margin-top: 15px;
-  font-size: 24px;
+.nickname-section {
+  margin-top: 2%;
+  padding: 0 5%;
+  display: flex;
+  justify-content: center;
+}
+
+.nickname {
+  margin: 0;
+  font-size: clamp(18px, 2.5vw, 24px);
   color: #303133;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nickname:hover .edit-icon {
+  opacity: 1;
+}
+
+.edit-icon {
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: #409eff;
+}
+
+.nickname-input {
+  width: 60%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.nickname-input :deep(.el-input__inner) {
+  text-align: center;
+}
+
+.username-display {
+  background-color: #f5f7fa;
+  padding: 8px 15px;
+  border-radius: 4px;
+  color: #909399;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
 }
 
 .info-card {
-  margin-bottom: 20px;
+  margin-bottom: 2vh;
+  width: 100%;
+  flex: 1;
+  min-height: 40vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  padding: 15px 0;
+  padding: 2% 0;
   border-bottom: 1px solid #ebeef5;
 }
 
@@ -188,13 +273,15 @@
 }
 
 .info-label {
-  width: 100px;
+  width: 25%;
+  min-width: 80px;
+  max-width: 120px;
   color: #606266;
 }
 
 .info-content {
   flex: 1;
-  margin: 0 20px;
+  margin: 0 3%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,7 +291,7 @@
   display: block;
   text-align: center;
   width: 100%;
-  max-width: 400px;
+  max-width: 90%;
   white-space: pre-wrap;
   word-wrap: break-word;
   line-height: 1.5;
@@ -212,10 +299,7 @@
 
 .info-content[data-key="motto"] span {
   min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
+  padding: 2% 0;
 }
 
 .info-content :deep(.el-textarea__inner) {
@@ -226,12 +310,15 @@
 }
 
 .info-action {
-  width: 50px;
+  width: 10%;
+  min-width: 50px;
   text-align: right;
 }
 
 .password-btn {
   width: 100%;
+  margin-top: 1vh;
+  margin-bottom: 2vh;
 }
 
 .dialog-footer {
@@ -241,15 +328,14 @@
 
 .info-content .el-radio-group {
   display: flex;
-  gap: 20px;
+  gap: 4%;
   justify-content: center;
   width: 100%;
-  max-width: 400px;
+  max-width: 90%;
 }
 
 .info-content .el-input {
-  max-width: 400px;
-  width: 100%;
+  width: 90%;
 }
 
 .info-content :deep(.el-input__inner) {
@@ -264,6 +350,70 @@
 .info-content > * {
   flex: 1;
   max-width: 400px;
+}
+
+/* 媒体查询，适应小屏幕 */
+@media screen and (max-width: 768px) {
+  .profile-container {
+    padding: 2vh 0 3vh;
+    gap: 1.5vh;
+  }
+
+  .info-card {
+    min-height: 35vh;
+  }
+
+  .info-label {
+    width: 30%;
+  }
+
+  .info-content {
+    margin: 0 2%;
+  }
+
+  .nickname-input {
+    width: 80%;
+  }
+
+  .info-content .el-radio-group {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+/* 媒体查询，适应超小屏幕 */
+@media screen and (max-width: 480px) {
+  .profile-container {
+    padding: 1.5vh 0 2.5vh;
+    gap: 1vh;
+  }
+
+  .info-card {
+    min-height: 30vh;
+  }
+
+  .info-item {
+    flex-direction: column;
+    padding: 4% 0;
+  }
+
+  .info-label {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 2%;
+  }
+
+  .info-content {
+    width: 100%;
+    margin: 2% 0;
+  }
+
+  .info-action {
+    width: 100%;
+    text-align: center;
+    margin-top: 2%;
+  }
 }
 </style>
 
@@ -311,6 +461,8 @@ export default {
   data() {
     return {
       username: "<Unknown Username>",
+      nickname: "",
+      isEditingNickname: false,
       avatar: "/favicon.ico",
       genderMap: {
         male: "男",
@@ -377,6 +529,7 @@ export default {
       try {
         const response = await this.$apis.getUserInfo(this.$var.auth.id);
         this.username = response.data.username;
+        this.nickname = response.data.name || response.data.username;
         this.avatar = response.data.avatar;
         this.listed.email.content = response.data.email;
         this.listed.phone.content = response.data.phone;
@@ -412,6 +565,19 @@ export default {
         }
       } finally {
         this.isSubmitting = false;
+      }
+    },
+    startEditNickname() {
+      this.isEditingNickname = true;
+    },
+    async saveNickname() {
+      try {
+        await this.$apis.setUserInfo("name", this.nickname);
+        this.isEditingNickname = false;
+        await this.updateInfo();
+        this.$message.success("昵称修改成功");
+      } catch (error) {
+        this.$utils.handleHttpException(error);
       }
     },
   },

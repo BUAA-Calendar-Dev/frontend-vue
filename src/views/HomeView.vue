@@ -491,7 +491,7 @@ export default {
     },
     updateUser() {
       this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
-        this.username = response.data.username;
+        this.username = response.data.name || response.data.username;
         this.userAvatar = response.data.avatar;
         console.log(response.data.username);
       });
