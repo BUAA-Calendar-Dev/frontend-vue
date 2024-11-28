@@ -407,22 +407,25 @@ export default {
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventStart) &&
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventEnd)
       ) {
-        // this.$refs.calendar.createEvent(this.eventDate, 120, {
-        //   title: this.eventName,
-        //   content: "yay! 🎉",
-        //   class: "blue-event",
-        // });
-        this.$apis.createEvent(
-          this.eventStart,
-          this.eventEnd,
-          this.eventName,
-          this.eventContent
-        );
-        this.eventDialogVisible = false;
-        this.resetDialogFields();
-        this.updateEvents();
-      } else {
-        this.$message.error("日期格式不正确，请按 YYYY-MM-DD HH:mm 格式输入。");
+        this.$apis
+          .createEvent(
+            this.eventStart,
+            this.eventEnd,
+            this.eventName,
+            this.eventContent
+          )
+          .then(() => {
+            // 等待创建成功后再更新事件列表
+            return this.updateEvents();
+          })
+          .then(() => {
+            this.eventDialogVisible = false;
+            this.resetDialogFields();
+            this.$message.success("事件创建成功");
+          })
+          .catch((error) => {
+            this.$message.error(`创建失败：${error.message}`);
+          });
       }
     },
     transferToStudent() {
