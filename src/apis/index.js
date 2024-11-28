@@ -33,9 +33,12 @@ export default new (class {
             config.headers["X-CSRFToken"] = csrf_token;
           }
 
-          const user_token = window.sessionStorage.getItem("user_token");
-          if (user_token) {
-            config.headers["Authorization"] = "JWT " + user_token;
+          const loginInfoStr = localStorage.getItem("loginInfo");
+          if (loginInfoStr) {
+            const loginInfo = JSON.parse(loginInfoStr);
+            if (loginInfo && loginInfo.token) {
+              config.headers["Authorization"] = "JWT " + loginInfo.token;
+            }
           }
 
           return config;

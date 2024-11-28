@@ -64,4 +64,12 @@ export class Authentic {
     this.id = 0;
     localStorage.removeItem("loginInfo");
   }
+
+  /**
+   * 获取当前的认证token
+   * @returns {string|null} 认证token
+   */
+  getToken() {
+    return this.token;
+  }
 }
