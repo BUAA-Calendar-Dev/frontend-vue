@@ -11,6 +11,9 @@ import {
   getActivityList,
   getActivityContent,
   updateActivityJoining,
+  updateActivityContent,
+  deleteActivity,
+  createActivity,
 } from "@/apis/activity";
 
 import axios from "axios";
@@ -145,5 +148,22 @@ export default new (class {
      * put '/api/tag'
      */
     this.newTag = newTag;
+
+    /**
+     * 更新活动内容
+     * post '/api/activity/{id}/modify'
+     */
+    this.updateActivityContent = updateActivityContent;
+
+    /**
+     * 删除活动
+     * post '/api/activity/{id}/delete'
+     */
+    this.deleteActivity = deleteActivity;
+
+    /**
+     * post '/api/activity/create'
+     */
+    this.createActivity = createActivity;
   }
 })();
