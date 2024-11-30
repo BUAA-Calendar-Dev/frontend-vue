@@ -715,7 +715,7 @@ export default {
         if (response.data.code === 0) {
           this.studentList = response.data.students.map((student) => ({
             ...student,
-            inClass: this.currentClass.teacher?.includes(student.username),
+            inClass: this.currentClass.students?.includes(student.id),
           }));
         }
       } catch (error) {
@@ -732,7 +732,7 @@ export default {
         if (response.data.code === 0) {
           this.teacherList = response.data.teachers.map((teacher) => ({
             ...teacher,
-            inClass: this.currentClass.teacher?.includes(teacher.username),
+            inClass: this.currentClass.teachers?.includes(teacher.id),
           }));
         }
       } catch (error) {
@@ -753,7 +753,9 @@ export default {
     async addSelectedStudents() {
       const studentIds = this.selectedStudents
         .filter((student) => !student.inClass)
-        .map((student) => student.username);
+        .map((student) => student.id);
+
+      if (studentIds.length === 0) return;
 
       try {
         await this.$apis.addStudentsToClass(this.currentClass.id, studentIds);
@@ -768,7 +770,9 @@ export default {
     async removeSelectedStudents() {
       const studentIds = this.selectedStudents
         .filter((student) => student.inClass)
-        .map((student) => student.username);
+        .map((student) => student.id);
+
+      if (studentIds.length === 0) return;
 
       try {
         await this.$apis.removeStudentsFromClass(
@@ -786,7 +790,9 @@ export default {
     async addSelectedTeachers() {
       const teacherIds = this.selectedTeachers
         .filter((teacher) => !teacher.inClass)
-        .map((teacher) => teacher.username);
+        .map((teacher) => teacher.id);
+
+      if (teacherIds.length === 0) return;
 
       try {
         await this.$apis.addTeachersToClass(this.currentClass.id, teacherIds);
@@ -801,7 +807,9 @@ export default {
     async removeSelectedTeachers() {
       const teacherIds = this.selectedTeachers
         .filter((teacher) => teacher.inClass)
-        .map((teacher) => teacher.username);
+        .map((teacher) => teacher.id);
+
+      if (teacherIds.length === 0) return;
 
       try {
         await this.$apis.removeTeachersFromClass(
