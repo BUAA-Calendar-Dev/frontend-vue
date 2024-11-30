@@ -134,7 +134,7 @@
       >
         <el-form-item label="班级名称" prop="title">
           <el-input
-            v-model="createClassForm.title"
+            v-model="createClassForm.name"
             placeholder="请输入班级名称（如：220611）"
           />
         </el-form-item>
@@ -170,7 +170,7 @@
       >
         <template #header>
           <div class="card-header">
-            <h3 class="class-title">{{ classItem.title }}</h3>
+            <h3 class="class-title">{{ classItem.name }}</h3>
             <div class="button-group">
               <el-button type="primary" @click="manageStudents(classItem)"
                 >管理学生</el-button
@@ -429,11 +429,11 @@ export default {
       loadingTeachers: false,
       createClassDialogVisible: false,
       createClassForm: {
-        title: "",
+        name: "",
         introduction: "",
       },
       createClassRules: {
-        title: [
+        name: [
           { required: true, message: "请输入班级名称", trigger: "blur" },
           {
             min: 3,
@@ -928,7 +928,7 @@ export default {
       this.creatingClass = true;
       try {
         const response = await this.$apis.createClass({
-          title: this.createClassForm.title,
+          name: this.createClassForm.name,
           introduction: this.createClassForm.introduction,
         });
 
