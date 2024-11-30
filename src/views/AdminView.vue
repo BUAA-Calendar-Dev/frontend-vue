@@ -449,28 +449,56 @@ export default {
       },
       teacherOptions: [],
       creatingClass: false,
+      classStudents: [], // 当前班级的学生
+      classTeachers: [], // 当前班级的教师
+      allStudents: [], // 所有可选的学生
+      allTeachers: [], // 所有可选的教师
+      loadingClassMembers: false,
     };
   },
   computed: {
     filteredStudentList() {
-      if (!this.studentSearch) return this.studentList;
+      if (!this.studentSearch) {
+        return this.allStudents.map((student) => ({
+          ...student,
+          inClass: this.classStudents.some((s) => s.id === student.id),
+        }));
+      }
+
       const search = this.studentSearch.toLowerCase();
-      return this.studentList.filter(
-        (student) =>
-          student.username.toLowerCase().includes(search) ||
-          student.name.toLowerCase().includes(search) ||
-          student.email.toLowerCase().includes(search)
-      );
+      return this.allStudents
+        .filter(
+          (student) =>
+            student.username.toLowerCase().includes(search) ||
+            student.name.toLowerCase().includes(search) ||
+            student.email.toLowerCase().includes(search)
+        )
+        .map((student) => ({
+          ...student,
+          inClass: this.classStudents.some((s) => s.id === student.id),
+        }));
     },
+
     filteredTeacherList() {
-      if (!this.teacherSearch) return this.teacherList;
+      if (!this.teacherSearch) {
+        return this.allTeachers.map((teacher) => ({
+          ...teacher,
+          inClass: this.classTeachers.some((t) => t.id === teacher.id),
+        }));
+      }
+
       const search = this.teacherSearch.toLowerCase();
-      return this.teacherList.filter(
-        (teacher) =>
-          teacher.username.toLowerCase().includes(search) ||
-          teacher.name.toLowerCase().includes(search) ||
-          teacher.email.toLowerCase().includes(search)
-      );
+      return this.allTeachers
+        .filter(
+          (teacher) =>
+            teacher.username.toLowerCase().includes(search) ||
+            teacher.name.toLowerCase().includes(search) ||
+            teacher.email.toLowerCase().includes(search)
+        )
+        .map((teacher) => ({
+          ...teacher,
+          inClass: this.classTeachers.some((t) => t.id === teacher.id),
+        }));
     },
     hasSelectedInClassStudents() {
       return this.selectedStudents.some((student) => student.inClass);
@@ -593,7 +621,7 @@ export default {
     handleEditSubmit() {
       // 验证表单
       if (!this.editForm.title.trim()) {
-        this.$message.error("请输入活动标题");
+        this.$message.error("请输入活��标题");
         return;
       }
       if (!this.editForm.start) {
@@ -699,24 +727,56 @@ export default {
     async manageStudents(classItem) {
       this.currentClass = classItem;
       this.studentDialogVisible = true;
-      await this.loadStudentList();
+      await Promise.all([this.loadClassStudents(), this.loadAllStudents()]);
     },
 
     async manageTeachers(classItem) {
       this.currentClass = classItem;
       this.teacherDialogVisible = true;
-      await this.loadTeacherList();
+      await Promise.all([this.loadClassTeachers(), this.loadAllTeachers()]);
     },
 
-    async loadStudentList() {
+    // 加载班级学生
+    async loadClassStudents() {
+      this.loadingClassMembers = true;
+      try {
+        const response = await this.$apis.getClassStudents(
+          this.currentClass.id
+        );
+        if (response.data.code === 0) {
+          this.classStudents = response.data.students || [];
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loadingClassMembers = false;
+      }
+    },
+
+    // 加载班级教师
+    async loadClassTeachers() {
+      this.loadingClassMembers = true;
+      try {
+        const response = await this.$apis.getClassTeachers(
+          this.currentClass.id
+        );
+        if (response.data.code === 0) {
+          this.classTeachers = response.data.teachers || [];
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loadingClassMembers = false;
+      }
+    },
+
+    // 加载所有可选学生
+    async loadAllStudents() {
       this.loadingStudents = true;
       try {
         const response = await this.$apis.getAvailableStudents();
         if (response.data.code === 0) {
-          this.studentList = response.data.students.map((student) => ({
-            ...student,
-            inClass: this.currentClass.students?.includes(student.id),
-          }));
+          this.allStudents = response.data.students || [];
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
@@ -725,15 +785,13 @@ export default {
       }
     },
 
-    async loadTeacherList() {
+    // 加载所有可选教师
+    async loadAllTeachers() {
       this.loadingTeachers = true;
       try {
         const response = await this.$apis.getAvailableTeachers();
         if (response.data.code === 0) {
-          this.teacherList = response.data.teachers.map((teacher) => ({
-            ...teacher,
-            inClass: this.currentClass.teachers?.includes(teacher.id),
-          }));
+          this.allTeachers = response.data.teachers || [];
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
@@ -760,8 +818,8 @@ export default {
       try {
         await this.$apis.addStudentsToClass(this.currentClass.id, studentIds);
         this.$message.success("添加成功");
-        await this.updateClassList();
-        await this.loadStudentList();
+        // 重新加载班级学生列表和班级信息
+        await Promise.all([this.loadClassStudents(), this.updateClassList()]);
       } catch (error) {
         this.$utils.handleHttpException(error);
       }
@@ -780,8 +838,8 @@ export default {
           studentIds
         );
         this.$message.success("移除成功");
-        await this.updateClassList();
-        await this.loadStudentList();
+        // 重新加载班级学生列表和班级信息
+        await Promise.all([this.loadClassStudents(), this.updateClassList()]);
       } catch (error) {
         this.$utils.handleHttpException(error);
       }
@@ -797,8 +855,8 @@ export default {
       try {
         await this.$apis.addTeachersToClass(this.currentClass.id, teacherIds);
         this.$message.success("添加成功");
-        await this.updateClassList();
-        await this.loadTeacherList();
+        // 重新加载班级教师列表和班级信息
+        await Promise.all([this.loadClassTeachers(), this.updateClassList()]);
       } catch (error) {
         this.$utils.handleHttpException(error);
       }
@@ -817,23 +875,26 @@ export default {
           teacherIds
         );
         this.$message.success("移除成功");
-        await this.updateClassList();
-        await this.loadTeacherList();
+        // 重新加载班级教师列表和班级信息
+        await Promise.all([this.loadClassTeachers(), this.updateClassList()]);
       } catch (error) {
         this.$utils.handleHttpException(error);
       }
     },
 
+    // 处理对话框关闭
     handleStudentDialogClose() {
       this.studentSearch = "";
       this.selectedStudents = [];
-      this.studentList = [];
+      this.classStudents = [];
+      this.allStudents = [];
     },
 
     handleTeacherDialogClose() {
       this.teacherSearch = "";
       this.selectedTeachers = [];
-      this.teacherList = [];
+      this.classTeachers = [];
+      this.allTeachers = [];
     },
 
     showCreateClassDialog() {

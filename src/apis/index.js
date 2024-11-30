@@ -28,6 +28,8 @@ import {
   addTeachersToClass,
   removeTeachersFromClass,
   createClass,
+  getClassStudents,
+  getClassTeachers,
 } from "@/apis/class";
 
 import axios from "axios";
@@ -241,5 +243,17 @@ export default new (class {
      * post '/api/user/reset_password'
      */
     this.changePassword = changePassword;
+
+    /**
+     * 获取班级学生列表
+     * get '/api/class/{id}/students'
+     */
+    this.getClassStudents = getClassStudents;
+
+    /**
+     * 获取班级教师列表
+     * get '/api/class/{id}/teachers'
+     */
+    this.getClassTeachers = getClassTeachers;
   }
 })();
