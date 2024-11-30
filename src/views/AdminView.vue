@@ -260,6 +260,112 @@
       </span>
     </template>
   </el-dialog>
+
+  <!-- 管理学生对话框 -->
+  <el-dialog
+    v-model="studentDialogVisible"
+    :title="`管理 ${currentClass?.title || ''} 班级学生`"
+    width="60%"
+  >
+    <div class="manage-dialog-content">
+      <div class="search-section">
+        <el-input
+          v-model="studentSearch"
+          placeholder="搜索学生"
+          clearable
+          style="margin-bottom: 15px"
+        />
+      </div>
+      <el-table
+        :data="filteredStudentList"
+        stripe
+        @selection-change="handleStudentSelectionChange"
+        v-loading="loadingStudents"
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="name" label="姓名" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="inClass" label="状态">
+          <template #default="scope">
+            <el-tag :type="scope.row.inClass ? 'success' : 'info'">
+              {{ scope.row.inClass ? "已在班级" : "未加入" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="dialog-footer">
+        <el-button @click="studentDialogVisible = false">取消</el-button>
+        <el-button
+          type="danger"
+          @click="removeSelectedStudents"
+          :disabled="!hasSelectedInClassStudents"
+        >
+          移出班级
+        </el-button>
+        <el-button
+          type="primary"
+          @click="addSelectedStudents"
+          :disabled="!hasSelectedNotInClassStudents"
+        >
+          加入班级
+        </el-button>
+      </div>
+    </div>
+  </el-dialog>
+
+  <!-- 管理教师对话框 -->
+  <el-dialog
+    v-model="teacherDialogVisible"
+    :title="`管理 ${currentClass?.title || ''} 班级教师`"
+    width="60%"
+  >
+    <div class="manage-dialog-content">
+      <div class="search-section">
+        <el-input
+          v-model="teacherSearch"
+          placeholder="搜索教师"
+          clearable
+          style="margin-bottom: 15px"
+        />
+      </div>
+      <el-table
+        :data="filteredTeacherList"
+        stripe
+        @selection-change="handleTeacherSelectionChange"
+        v-loading="loadingTeachers"
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="name" label="姓名" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="inClass" label="状态">
+          <template #default="scope">
+            <el-tag :type="scope.row.inClass ? 'success' : 'info'">
+              {{ scope.row.inClass ? "已在班级" : "未加入" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="dialog-footer">
+        <el-button @click="teacherDialogVisible = false">取消</el-button>
+        <el-button
+          type="danger"
+          @click="removeSelectedTeachers"
+          :disabled="!hasSelectedInClassTeachers"
+        >
+          移出班级
+        </el-button>
+        <el-button
+          type="primary"
+          @click="addSelectedTeachers"
+          :disabled="!hasSelectedNotInClassTeachers"
+        >
+          加入班级
+        </el-button>
+      </div>
+    </div>
+  </el-dialog>
 </template>
 
 <script>
@@ -605,12 +711,11 @@ export default {
     async loadStudentList() {
       this.loadingStudents = true;
       try {
-        const response = await this.$apis.getStudentList();
+        const response = await this.$apis.getAvailableStudents();
         if (response.data.code === 0) {
-          // 标记学生是否在当前班级中
           this.studentList = response.data.students.map((student) => ({
             ...student,
-            inClass: this.currentClass.students?.includes(student.username),
+            inClass: this.currentClass.teacher?.includes(student.username),
           }));
         }
       } catch (error) {
@@ -623,9 +728,8 @@ export default {
     async loadTeacherList() {
       this.loadingTeachers = true;
       try {
-        const response = await this.$apis.getTeacherList();
+        const response = await this.$apis.getAvailableTeachers();
         if (response.data.code === 0) {
-          // 标记教师是否在当前班级中
           this.teacherList = response.data.teachers.map((teacher) => ({
             ...teacher,
             inClass: this.currentClass.teacher?.includes(teacher.username),

@@ -5,11 +5,11 @@ export function getClassList() {
 }
 
 export function getAvailableStudents() {
-  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/student/list`);
+  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/user/students`);
 }
 
 export function getAvailableTeachers() {
-  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/teacher/list`);
+  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/user/teachers`);
 }
 
 export function addStudentsToClass(classId, studentIds) {
