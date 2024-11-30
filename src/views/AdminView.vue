@@ -211,7 +211,123 @@
       </el-card>
     </div>
   </div>
-  <div class="main teacher-main" v-if="navChoosed == '教师管理'">教师管理</div>
+  <div class="main user-main" v-if="navChoosed == '用户管理'">
+    <el-divider>用户管理</el-divider>
+    <div class="user-management">
+      <div class="search-section">
+        <el-input
+          v-model="userSearch"
+          placeholder="搜索用户（用户名/姓名/邮箱/电话/ID）"
+          clearable
+          style="width: 300px; margin-bottom: 20px"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <el-table
+        :data="filteredUserList"
+        stripe
+        v-loading="loadingUsers"
+        style="width: 100%"
+      >
+        <el-table-column prop="id" label="用户ID" width="80" />
+        <el-table-column prop="username" label="用户名" width="120" />
+        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="gender" label="性别" width="80">
+          <template #default="scope">
+            {{ scope.row.gender === "male" ? "男" : "女" }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" width="180" />
+        <el-table-column prop="phone" label="电话" width="120" />
+        <el-table-column
+          prop="motto"
+          label="个性签名"
+          min-width="150"
+          show-overflow-tooltip
+        />
+        <el-table-column prop="role" label="角色" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.role === 'teacher' ? 'success' : 'info'">
+              {{ scope.row.role === "teacher" ? "教师" : "学生" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220" fixed="right">
+          <template #default="scope">
+            <el-button
+              type="primary"
+              size="small"
+              :disabled="scope.row.role === 'teacher'"
+              @click="handleImpower(scope.row)"
+            >
+              提升为教师
+            </el-button>
+            <el-button
+              type="warning"
+              size="small"
+              @click="handleResetPassword(scope.row)"
+            >
+              重置密码
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 重置密码对话框 -->
+    <el-dialog
+      v-model="resetPasswordDialogVisible"
+      title="重置密码"
+      width="30%"
+      @close="handleResetPasswordDialogClose"
+    >
+      <el-form
+        ref="resetPasswordForm"
+        :model="resetPasswordForm"
+        :rules="resetPasswordRules"
+        label-width="100px"
+      >
+        <div class="user-info" style="margin-bottom: 20px">
+          <p><strong>用户名：</strong>{{ currentUser?.username }}</p>
+          <p><strong>姓名：</strong>{{ currentUser?.name }}</p>
+        </div>
+        <el-form-item label="新密码" prop="password">
+          <el-input
+            v-model="resetPasswordForm.password"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="resetPasswordForm.confirmPassword"
+            type="password"
+            show-password
+            placeholder="请再次输入新密码"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="resetPasswordDialogVisible = false"
+            >取消</el-button
+          >
+          <el-button
+            type="primary"
+            @click="submitResetPassword"
+            :loading="resettingPassword"
+          >
+            确认重置
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
   <el-dialog v-model="editDialogVisible" title="修改活动" width="500px">
     <el-form :model="editForm" label-width="100px">
       <el-form-item label="活动标题" required>
@@ -370,13 +486,39 @@
 
 <script>
 import { ElMessageBox } from "element-plus";
+import { Search } from "@element-plus/icons-vue";
 
 export default {
   name: "AdminView",
-  components: {},
+  components: {
+    Search,
+  },
   data() {
+    // 密码验证规则
+    const validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入密码"));
+      } else if (value.length < 6) {
+        callback(new Error("密码长度不能小于6位"));
+      } else {
+        if (this.resetPasswordForm.confirmPassword !== "") {
+          this.$refs.resetPasswordForm.validateField("confirmPassword");
+        }
+        callback();
+      }
+    };
+    const validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.resetPasswordForm.password) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
+
     return {
-      navOptions: ["活动管理", "班级管理", "教师管理"],
+      navOptions: ["活动管理", "班级管理", "用户管理"],
       navChoosed: "活动管理",
       activityList: [],
       editDialogVisible: false,
@@ -454,6 +596,20 @@ export default {
       allStudents: [], // 所有可选的学生
       allTeachers: [], // 所有可选的教师
       loadingClassMembers: false,
+      userSearch: "",
+      userList: [],
+      loadingUsers: false,
+      resetPasswordDialogVisible: false,
+      resettingPassword: false,
+      currentUser: null,
+      resetPasswordForm: {
+        password: "",
+        confirmPassword: "",
+      },
+      resetPasswordRules: {
+        password: [{ validator: validatePass, trigger: "blur" }],
+        confirmPassword: [{ validator: validatePass2, trigger: "blur" }],
+      },
     };
   },
   computed: {
@@ -511,6 +667,29 @@ export default {
     },
     hasSelectedNotInClassTeachers() {
       return this.selectedTeachers.some((teacher) => !teacher.inClass);
+    },
+    filteredUserList() {
+      if (!this.userSearch) return this.userList;
+
+      const search = this.userSearch.toLowerCase();
+      return this.userList.filter(
+        (user) =>
+          user.username.toLowerCase().includes(search) ||
+          user.name.toLowerCase().includes(search) ||
+          user.email?.toLowerCase().includes(search) ||
+          user.phone?.toLowerCase().includes(search) ||
+          user.id.toString().includes(search)
+      );
+    },
+  },
+  watch: {
+    navChoosed: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal === "用户管理") {
+          this.loadUserList();
+        }
+      },
     },
   },
   mounted() {
@@ -621,7 +800,7 @@ export default {
     handleEditSubmit() {
       // 验证表单
       if (!this.editForm.title.trim()) {
-        this.$message.error("请输入活��标题");
+        this.$message.error("请输入活标题");
         return;
       }
       if (!this.editForm.start) {
@@ -949,6 +1128,112 @@ export default {
     resetCreateForm() {
       this.$refs.createClassForm?.resetFields();
     },
+
+    async loadUserList() {
+      this.loadingUsers = true;
+      try {
+        // 并行获取学生和教师列表
+        const [studentsRes, teachersRes] = await Promise.all([
+          this.$apis.getAvailableStudents(),
+          this.$apis.getAvailableTeachers(),
+        ]);
+
+        const users = [];
+
+        // 处理学生列表
+        if (studentsRes.data.code === 0 && studentsRes.data.students) {
+          users.push(
+            ...studentsRes.data.students.map((student) => ({
+              ...student,
+              role: "student",
+            }))
+          );
+        }
+
+        // 处理教师列表
+        if (teachersRes.data.code === 0 && teachersRes.data.teachers) {
+          users.push(
+            ...teachersRes.data.teachers.map((teacher) => ({
+              ...teacher,
+              role: "teacher",
+            }))
+          );
+        }
+
+        this.userList = users;
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loadingUsers = false;
+      }
+    },
+
+    async handleImpower(user) {
+      try {
+        await this.$confirm(
+          `确定要将用户 "${user.name}" (${user.username}) 提升为教师吗？`,
+          "提示",
+          {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning",
+          }
+        );
+
+        const response = await this.$apis.impowerTeacher(user.id);
+
+        if (response.data.code === 0) {
+          this.$message.success("提升成功");
+          // 更新用户列表
+          await this.loadUserList();
+        } else {
+          this.$message.error(response.data.message || "提升失败");
+        }
+      } catch (error) {
+        if (error !== "cancel") {
+          this.$utils.handleHttpException(error);
+        }
+      }
+    },
+
+    handleResetPassword(user) {
+      this.currentUser = user;
+      this.resetPasswordDialogVisible = true;
+    },
+
+    handleResetPasswordDialogClose() {
+      this.resetPasswordForm.password = "";
+      this.resetPasswordForm.confirmPassword = "";
+      this.currentUser = null;
+      this.$refs.resetPasswordForm?.resetFields();
+    },
+
+    async submitResetPassword() {
+      try {
+        await this.$refs.resetPasswordForm.validate();
+      } catch (error) {
+        return;
+      }
+
+      this.resettingPassword = true;
+      try {
+        const response = await this.$apis.resetUserPassword(
+          this.currentUser.id,
+          this.resetPasswordForm.password
+        );
+
+        if (response.data.code === 0) {
+          this.$message.success("密码重置成功");
+          this.resetPasswordDialogVisible = false;
+        } else {
+          this.$message.error(response.data.message || "密码重置失败");
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.resettingPassword = false;
+      }
+    },
   },
 };
 </script>
@@ -1175,6 +1460,33 @@ export default {
 
 .button-group {
   display: flex;
+  gap: 10px;
+}
+
+.teacher-management {
+  padding: 20px;
+}
+
+.search-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.user-info {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.user-info p {
+  margin: 5px 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
   gap: 10px;
 }
 </style>

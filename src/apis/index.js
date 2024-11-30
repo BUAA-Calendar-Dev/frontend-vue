@@ -31,6 +31,7 @@ import {
   getClassStudents,
   getClassTeachers,
 } from "@/apis/class";
+import { impowerTeacher, resetUserPassword, getAllUsers } from "./user";
 
 import axios from "axios";
 
@@ -255,5 +256,23 @@ export default new (class {
      * get '/api/class/{id}/teachers'
      */
     this.getClassTeachers = getClassTeachers;
+
+    /**
+     * 提升用户为教师
+     * post '/api/user/impower'
+     */
+    this.impowerTeacher = impowerTeacher;
+
+    /**
+     * 重置用户密码
+     * post '/api/user/{id}/reset-password'
+     */
+    this.resetUserPassword = resetUserPassword;
+
+    /**
+     * 获取所有用户列表
+     * get '/api/user/list'
+     */
+    this.getAllUsers = getAllUsers;
   }
 })();
