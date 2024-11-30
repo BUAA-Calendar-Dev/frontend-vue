@@ -123,7 +123,95 @@
       </el-form>
     </div>
   </div>
-  <div class="main class-main" v-if="navChoosed == '班级管理'">班级管理</div>
+  <div class="main class-main" v-if="navChoosed == '班级管理'">
+    <el-divider>创建新班级</el-divider>
+    <div class="create-class-section">
+      <el-form
+        ref="createClassForm"
+        :model="createClassForm"
+        :rules="createClassRules"
+        label-width="100px"
+        class="create-class-form"
+      >
+        <el-form-item label="班级名称" prop="title">
+          <el-input
+            v-model="createClassForm.title"
+            placeholder="请输入班级名称（如：220611）"
+          />
+        </el-form-item>
+
+        <el-form-item label="班级描述" prop="introduction">
+          <el-input
+            v-model="createClassForm.introduction"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入班级描述"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button
+            type="primary"
+            @click="handleCreateClass"
+            :loading="creatingClass"
+          >
+            创建班级
+          </el-button>
+          <el-button @click="resetCreateForm"> 重置 </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <el-divider>班级列表</el-divider>
+    <div class="class-container">
+      <el-card
+        v-for="(classItem, index) in classList"
+        :key="index"
+        class="class-card"
+      >
+        <template #header>
+          <div class="card-header">
+            <h3 class="class-title">{{ classItem.title }}</h3>
+            <div class="button-group">
+              <el-button type="primary" @click="manageStudents(classItem)"
+                >管理学生</el-button
+              >
+              <el-button type="success" @click="manageTeachers(classItem)"
+                >管理教师</el-button
+              >
+            </div>
+          </div>
+        </template>
+        <div class="class-info">
+          <div class="info-section">
+            <div class="info-item">
+              <span class="info-label">班级描述：</span>
+              <span class="info-content">{{
+                classItem.introduction || "暂无描述"
+              }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">班级人数：</span>
+              <span class="info-content">{{ classItem.count || 0 }} 人</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">任课教师：</span>
+              <span class="info-content">
+                <el-tag
+                  v-for="(teacher, idx) in classItem.teacher"
+                  :key="idx"
+                  size="small"
+                  style="margin-right: 5px; margin-bottom: 5px"
+                >
+                  {{ teacher }}
+                </el-tag>
+              </span>
+            </div>
+          </div>
+        </div>
+      </el-card>
+    </div>
+  </div>
   <div class="main teacher-main" v-if="navChoosed == '教师管理'">教师管理</div>
   <el-dialog v-model="editDialogVisible" title="修改活动" width="500px">
     <el-form :model="editForm" label-width="100px">
@@ -222,7 +310,75 @@ export default {
         start: "",
         end: "",
       },
+      classList: [],
+      currentClass: null,
+      studentDialogVisible: false,
+      teacherDialogVisible: false,
+      studentSearch: "",
+      teacherSearch: "",
+      studentList: [],
+      teacherList: [],
+      selectedStudents: [],
+      selectedTeachers: [],
+      loadingStudents: false,
+      loadingTeachers: false,
+      createClassDialogVisible: false,
+      createClassForm: {
+        title: "",
+        introduction: "",
+      },
+      createClassRules: {
+        title: [
+          { required: true, message: "请输入班级名称", trigger: "blur" },
+          {
+            min: 3,
+            max: 20,
+            message: "长度在 3 到 20 个字符",
+            trigger: "blur",
+          },
+        ],
+        introduction: [
+          { required: true, message: "请输入班级描述", trigger: "blur" },
+          { max: 200, message: "描述不能超过 200 个字符", trigger: "blur" },
+        ],
+      },
+      teacherOptions: [],
+      creatingClass: false,
     };
+  },
+  computed: {
+    filteredStudentList() {
+      if (!this.studentSearch) return this.studentList;
+      const search = this.studentSearch.toLowerCase();
+      return this.studentList.filter(
+        (student) =>
+          student.username.toLowerCase().includes(search) ||
+          student.name.toLowerCase().includes(search) ||
+          student.email.toLowerCase().includes(search)
+      );
+    },
+    filteredTeacherList() {
+      if (!this.teacherSearch) return this.teacherList;
+      const search = this.teacherSearch.toLowerCase();
+      return this.teacherList.filter(
+        (teacher) =>
+          teacher.username.toLowerCase().includes(search) ||
+          teacher.name.toLowerCase().includes(search) ||
+          teacher.email.toLowerCase().includes(search)
+      );
+    },
+    hasSelectedInClassStudents() {
+      return this.selectedStudents.some((student) => student.inClass);
+    },
+    hasSelectedNotInClassStudents() {
+      return this.selectedStudents.some((student) => !student.inClass);
+    },
+    hasSelectedInClassTeachers() {
+      return this.selectedTeachers.some((teacher) => teacher.inClass);
+    },
+    hasSelectedNotInClassTeachers() {
+      return this.selectedTeachers.some((teacher) => !teacher.inClass);
+    },
   },
   mounted() {
     if (!this.$var.auth.isValid()) {
@@ -234,6 +390,7 @@ export default {
       this.$router.push({ path: "/" });
     }
     this.updateList();
+    this.updateClassList();
   },
   methods: {
     updateList() {
@@ -283,7 +440,7 @@ export default {
             .catch(this.$utils.handleHttpException);
         })
         .catch(() => {
-          this.$message.info("取消删除");
+          this.$message.info("取删除");
         });
     },
 
@@ -418,6 +575,206 @@ export default {
         end: "",
       };
     },
+
+    updateClassList() {
+      this.$apis
+        .getClassList()
+        .then((response) => {
+          if (response.data.code === 0) {
+            this.classList = response.data.class;
+          } else {
+            this.$message.error("获取班级列表失败");
+          }
+        })
+        .catch(this.$utils.handleHttpException);
+    },
+
+    async manageStudents(classItem) {
+      this.currentClass = classItem;
+      this.studentDialogVisible = true;
+      await this.loadStudentList();
+    },
+
+    async manageTeachers(classItem) {
+      this.currentClass = classItem;
+      this.teacherDialogVisible = true;
+      await this.loadTeacherList();
+    },
+
+    async loadStudentList() {
+      this.loadingStudents = true;
+      try {
+        const response = await this.$apis.getStudentList();
+        if (response.data.code === 0) {
+          // 标记学生是否在当前班级中
+          this.studentList = response.data.students.map((student) => ({
+            ...student,
+            inClass: this.currentClass.students?.includes(student.username),
+          }));
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loadingStudents = false;
+      }
+    },
+
+    async loadTeacherList() {
+      this.loadingTeachers = true;
+      try {
+        const response = await this.$apis.getTeacherList();
+        if (response.data.code === 0) {
+          // 标记教师是否在当前班级中
+          this.teacherList = response.data.teachers.map((teacher) => ({
+            ...teacher,
+            inClass: this.currentClass.teacher?.includes(teacher.username),
+          }));
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loadingTeachers = false;
+      }
+    },
+
+    handleStudentSelectionChange(selection) {
+      this.selectedStudents = selection;
+    },
+
+    handleTeacherSelectionChange(selection) {
+      this.selectedTeachers = selection;
+    },
+
+    async addSelectedStudents() {
+      const studentIds = this.selectedStudents
+        .filter((student) => !student.inClass)
+        .map((student) => student.username);
+
+      try {
+        await this.$apis.addStudentsToClass(this.currentClass.id, studentIds);
+        this.$message.success("添加成功");
+        await this.updateClassList();
+        await this.loadStudentList();
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    async removeSelectedStudents() {
+      const studentIds = this.selectedStudents
+        .filter((student) => student.inClass)
+        .map((student) => student.username);
+
+      try {
+        await this.$apis.removeStudentsFromClass(
+          this.currentClass.id,
+          studentIds
+        );
+        this.$message.success("移除成功");
+        await this.updateClassList();
+        await this.loadStudentList();
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    async addSelectedTeachers() {
+      const teacherIds = this.selectedTeachers
+        .filter((teacher) => !teacher.inClass)
+        .map((teacher) => teacher.username);
+
+      try {
+        await this.$apis.addTeachersToClass(this.currentClass.id, teacherIds);
+        this.$message.success("添加成功");
+        await this.updateClassList();
+        await this.loadTeacherList();
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    async removeSelectedTeachers() {
+      const teacherIds = this.selectedTeachers
+        .filter((teacher) => teacher.inClass)
+        .map((teacher) => teacher.username);
+
+      try {
+        await this.$apis.removeTeachersFromClass(
+          this.currentClass.id,
+          teacherIds
+        );
+        this.$message.success("移除成功");
+        await this.updateClassList();
+        await this.loadTeacherList();
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    handleStudentDialogClose() {
+      this.studentSearch = "";
+      this.selectedStudents = [];
+      this.studentList = [];
+    },
+
+    handleTeacherDialogClose() {
+      this.teacherSearch = "";
+      this.selectedTeachers = [];
+      this.teacherList = [];
+    },
+
+    showCreateClassDialog() {
+      this.createClassDialogVisible = true;
+      this.loadTeacherOptions();
+    },
+
+    async loadTeacherOptions() {
+      try {
+        const response = await this.$apis.getTeacherList();
+        if (response.data.code === 0) {
+          this.teacherOptions = response.data.teachers;
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    handleCreateClassDialogClose() {
+      this.$refs.createClassForm?.resetFields();
+      this.createClassForm.teachers = [];
+    },
+
+    async handleCreateClass() {
+      try {
+        await this.$refs.createClassForm.validate();
+      } catch (error) {
+        return;
+      }
+
+      this.creatingClass = true;
+      try {
+        const response = await this.$apis.createClass({
+          title: this.createClassForm.title,
+          introduction: this.createClassForm.introduction,
+        });
+
+        if (response.data.code === 0) {
+          this.$message.success("班级创建成功");
+          this.resetCreateForm();
+          this.updateClassList();
+        } else {
+          this.$message.error(response.data.message || "创建失败");
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.creatingClass = false;
+      }
+    },
+
+    resetCreateForm() {
+      this.$refs.createClassForm?.resetFields();
+    },
   },
 };
 </script>
@@ -541,5 +898,109 @@ export default {
 
 :deep(.el-form-item__content) {
   justify-content: flex-start;
+}
+
+.class-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  align-items: center;
+}
+
+.class-card {
+  width: 80%;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+}
+
+.class-card:hover {
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.class-title {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.class-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-section h4 {
+  margin-bottom: 10px;
+  color: #606266;
+}
+
+.manage-dialog-content {
+  padding: 20px;
+}
+
+.dialog-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.search-section {
+  margin-bottom: 20px;
+}
+
+:deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.class-header {
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create-class-section {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.create-class-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.info-item {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #606266;
+  width: 85px;
+  flex-shrink: 0;
+}
+
+.info-content {
+  color: #333;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
 }
 </style>

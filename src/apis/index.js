@@ -4,7 +4,6 @@ import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
 import { getUserInfo, setUserInfo } from "@/apis/userinfo";
-import { getClassList } from "@/apis/class";
 import { getTaskList } from "@/apis/tasks";
 import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
 import {
@@ -15,6 +14,16 @@ import {
   deleteActivity,
   createActivity,
 } from "@/apis/activity";
+import {
+  getClassList,
+  getAvailableStudents,
+  getAvailableTeachers,
+  addStudentsToClass,
+  removeStudentsFromClass,
+  addTeachersToClass,
+  removeTeachersFromClass,
+  createClass,
+} from "./class";
 
 import axios from "axios";
 
@@ -120,11 +129,6 @@ export default new (class {
     this.updateActivityJoining = updateActivityJoining;
 
     /**
-     * get '/api/class'
-     */
-    this.getClassList = getClassList;
-
-    /**
      * get '/api/tasks'
      */
     this.getTaskList = getTaskList;
@@ -165,5 +169,54 @@ export default new (class {
      * post '/api/activity/create'
      */
     this.createActivity = createActivity;
+
+    // 班级相关接口
+    /**
+     * 获取班级列表
+     * get '/api/class/info'
+     */
+    this.getClassList = getClassList;
+
+    /**
+     * 获取可用学生列表
+     * get '/api/student/list'
+     */
+    this.getAvailableStudents = getAvailableStudents;
+
+    /**
+     * 获取可用教师列表
+     * get '/api/teacher/list'
+     */
+    this.getAvailableTeachers = getAvailableTeachers;
+
+    /**
+     * 批量添加学生到班级
+     * post '/api/class/{id}/student'
+     */
+    this.addStudentsToClass = addStudentsToClass;
+
+    /**
+     * 批量从班级移除学生
+     * post '/api/class/{id}/student/delete'
+     */
+    this.removeStudentsFromClass = removeStudentsFromClass;
+
+    /**
+     * 批量添加教师到班级
+     * post '/api/class/{id}/teacher'
+     */
+    this.addTeachersToClass = addTeachersToClass;
+
+    /**
+     * 批量从班级移除教师
+     * post '/api/class/{id}/remove-teachers'
+     */
+    this.removeTeachersFromClass = removeTeachersFromClass;
+
+    /**
+     * 创建新班级
+     * post '/api/class/create'
+     */
+    this.createClass = createClass;
   }
 })();
