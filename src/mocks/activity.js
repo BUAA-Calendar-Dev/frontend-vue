@@ -25,7 +25,7 @@ mockjs.mock("/api/activity/public", "get", () => {
   };
 });
 
-const get_activity_pat = RegExp("/api/activity/(\\d+)/(\\w+)");
+const get_activity_pat = RegExp("^/api/activity/(\\d+)/(\\w+)");
 
 mockjs.mock(get_activity_pat, "get", (options) => {
   const urlParams = options.url.match(get_activity_pat);

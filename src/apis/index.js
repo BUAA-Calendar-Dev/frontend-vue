@@ -3,8 +3,13 @@ import { getMessageList, setReadMessage } from "@/apis/message-receiver";
 import { getUser } from "@/apis/user";
 import { getEvent, createEvent } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
-import { getUserInfo, setUserInfo } from "@/apis/userinfo";
-import { getTaskList } from "@/apis/tasks";
+import {
+  getUserInfo,
+  setUserInfo,
+  updateAvatar,
+  changePassword,
+} from "@/apis/userinfo";
+import { getTaskList, createTask } from "@/apis/tasks";
 import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
 import {
   getActivityList,
@@ -23,7 +28,7 @@ import {
   addTeachersToClass,
   removeTeachersFromClass,
   createClass,
-} from "./class";
+} from "@/apis/class";
 
 import axios from "axios";
 
@@ -45,9 +50,12 @@ export default new (class {
             config.headers["X-CSRFToken"] = csrf_token;
           }
 
-          const user_token = window.sessionStorage.getItem("user_token");
-          if (user_token) {
-            config.headers["Authorization"] = "JWT " + user_token;
+          const loginInfoStr = localStorage.getItem("loginInfo");
+          if (loginInfoStr) {
+            const loginInfo = JSON.parse(loginInfoStr);
+            if (loginInfo && loginInfo.token) {
+              config.headers["Authorization"] = "JWT " + loginInfo.token;
+            }
           }
 
           return config;
@@ -218,5 +226,20 @@ export default new (class {
      * post '/api/class/create'
      */
     this.createClass = createClass;
+
+    /**
+     * post '/api/task/create'
+     */
+    this.createTask = createTask;
+
+    /**
+     * post '/api/user/avatar'
+     */
+    this.updateAvatar = updateAvatar;
+
+    /**
+     * post '/api/user/reset_password'
+     */
+    this.changePassword = changePassword;
   }
 })();

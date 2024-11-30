@@ -32,7 +32,7 @@ var data = {
 
 mockjs.mock("/api/message/info", "get", data);
 
-const read_message_pat = RegExp("/api/message/(\\d+)/read");
+const read_message_pat = RegExp("^/api/message/(\\d+)/read");
 
 mockjs.mock(read_message_pat, "post", (options) => {
   const urlParams = options.url.match(read_message_pat);

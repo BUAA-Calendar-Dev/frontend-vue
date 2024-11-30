@@ -2,81 +2,130 @@
   <div class="calendar-view">
     <el-container>
       <!-- 左侧栏 -->
-      <el-aside width="400px" style="background-color: cyan">
-        <!-- 班级 -->
-        <span v-if="$var.auth.role == 'teacher'">
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToClass">班级</el-link>
-            </el-col>
-          </el-row>
+      <el-aside width="300px" class="app-aside">
+        <!-- 当显示任务列表时 -->
+        <div v-if="showTaskList">
+          <div class="aside-header">
+            <h2>任务列表</h2>
+            <el-button
+              @click="showTaskList = false"
+              type="primary"
+              size="small"
+              class="back-button"
+            >
+              返回
+            </el-button>
+          </div>
 
-          <!-- Tag + -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToTags">管理班级</el-link>
-            </el-col>
-          </el-row>
+          <!-- 任务列表 -->
+          <el-scrollbar height="calc(100vh - 100px)" class="task-scrollbar">
+            <el-row
+              v-for="task in taskList"
+              :key="task.id"
+              justify="center"
+              class="task-item"
+            >
+              <el-col :span="20">
+                <el-card shadow="hover" class="task-card">
+                  <template #header>
+                    <div class="task-header">
+                      <span>{{ task.name }}</span>
+                      <el-tag size="small" class="deadline-tag">
+                        {{ new Date(task.endTime).toLocaleDateString() }}
+                      </el-tag>
+                    </div>
+                  </template>
+                  <div class="task-content">
+                    <p>{{ task.content }}</p>
+                    <el-progress
+                      :percentage="
+                        calculateProgress(task.startTime, task.endTime)
+                      "
+                      :status="
+                        calculateProgress(task.startTime, task.endTime) >= 100
+                          ? 'success'
+                          : ''
+                      "
+                    />
+                    <div class="task-time">
+                      <span
+                        >开始:
+                        {{ new Date(task.startTime).toLocaleString() }}</span
+                      >
+                      <span
+                        >结束:
+                        {{ new Date(task.endTime).toLocaleString() }}</span
+                      >
+                    </div>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+          </el-scrollbar>
+        </div>
 
-          <!-- 活动 -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToActivities">创建提醒</el-link>
-            </el-col>
-          </el-row>
+        <!-- 原有的导航菜单，当不显示任务列表时显示 -->
+        <span v-else-if="$var.auth.role == 'teacher'">
+          <div class="aside-header">
+            <h2>教师菜单</h2>
+          </div>
+          <div class="menu-list">
+            <div class="menu-item" @click="goToClass">
+              <i class="el-icon-user-group"></i>
+              <span>班级</span>
+            </div>
 
-          <!-- 浏览全校活动 / DDL -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToSchoolActivities"
-                >DDL</el-link
-              >
-              <el-link
-                type="primary"
-                @click="goToDDL"
-                style="display: block; margin-top: 10px"
-                >已发布的DDL</el-link
-              >
-            </el-col>
-          </el-row>
+            <!-- Tag + -->
+            <div class="menu-item" @click="goToTags">
+              <i class="el-icon-collection-tag"></i>
+              <span>管理班级</span>
+            </div>
+
+            <!-- 活动 -->
+            <div class="menu-item" @click="goToActivities">
+              <i class="el-icon-bell"></i>
+              <span>创建班级提醒</span>
+            </div>
+
+            <!-- 浏览全校活动 / DDL -->
+            <div class="menu-item" @click="goToSchoolActivities">
+              <i class="el-icon-time"></i>
+              <span>DDL</span>
+            </div>
+            <div class="menu-item" @click="goToDDL">
+              <i class="el-icon-document"></i>
+              <span>已发布的DDL</span>
+            </div>
+          </div>
         </span>
-        <span v-if="$var.auth.role == 'student'">
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToClass">班级</el-link>
-            </el-col>
-          </el-row>
+        <span v-else-if="$var.auth.role == 'student'">
+          <div class="aside-header">
+            <h2>学生菜单</h2>
+          </div>
+          <div class="menu-list">
+            <div class="menu-item" @click="goToClass">
+              <i class="el-icon-user-group"></i>
+              <span>班级</span>
+            </div>
 
-          <!-- Tag + -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToTags">任务标签</el-link>
-            </el-col>
-          </el-row>
+            <!-- Tag + -->
+            <div class="menu-item" @click="goToTags">
+              <i class="el-icon-collection-tag"></i>
+              <span>任务标签</span>
+            </div>
 
-          <!-- 活动 -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <el-link type="primary" @click="goToActivities">活动</el-link>
-            </el-col>
-          </el-row>
+            <!-- 活动 -->
+            <div class="menu-item" @click="goToActivities">
+              <i class="el-icon-bell"></i>
+              <span>活动</span>
+            </div>
 
-          <!-- TODO: Why seperate them from the items above? ---- sk -->
-          <!-- 浏览全校活动 / DDL -->
-          <el-row justify="center" style="margin-top: 20px">
-            <el-col :span="18">
-              <!-- Remove this item since we have a "活动" above -->
-              <!-- <el-link type="primary" @click="goToSchoolActivities"
-                >浏览全校活动</el-link
-              > -->
-              <el-link
-                type="primary"
-                @click="goToDDL"
-                style="display: block; margin-top: 10px"
-                >DDL</el-link
-              >
-            </el-col>
-          </el-row>
+            <!-- DDL -->
+            <div class="menu-item" @click="goToDDL">
+              <i class="el-icon-time"></i>
+              <span>DDL</span>
+            </div>
+          </div>
         </span>
       </el-aside>
       <el-container>
@@ -109,7 +158,13 @@
                     />
                   </el-tooltip>
                 </el-badge>
-                <el-button @click="customEventCreation" type="warning" round>
+                <el-button
+                  @click="customEventCreation"
+                  class="create-schedule-btn"
+                  type="primary"
+                  round
+                >
+                  <i class="el-icon-plus" style="margin-right: 4px" />
                   创建新日程
                 </el-button>
               </span>
@@ -163,27 +218,38 @@
           <el-dialog
             title="创建新事件"
             v-model="eventDialogVisible"
-            width="400px"
+            width="500px"
             @close="resetDialogFields"
           >
-            <el-form>
+            <el-form :model="eventForm" label-width="100px">
               <el-form-item label="事件名称" required>
                 <el-input v-model="eventName" placeholder="请输入事件名称" />
               </el-form-item>
-              <el-form-item label="事件开始" required>
-                <el-input
+              <el-form-item label="开始时间" required>
+                <el-date-picker
                   v-model="eventStart"
-                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                  type="datetime"
+                  placeholder="选择开始时间"
+                  format="YYYY-MM-DD HH:mm"
+                  value-format="YYYY-MM-DD HH:mm"
                 />
               </el-form-item>
-              <el-form-item label="事件结束" required>
-                <el-input
+              <el-form-item label="结束时间" required>
+                <el-date-picker
                   v-model="eventEnd"
-                  placeholder="请输入日期 (YYYY-MM-DD HH:mm)"
+                  type="datetime"
+                  placeholder="选择结束时间"
+                  format="YYYY-MM-DD HH:mm"
+                  value-format="YYYY-MM-DD HH:mm"
                 />
               </el-form-item>
               <el-form-item label="事件内容" required>
-                <el-input v-model="eventContent" placeholder="请输入事件内容" />
+                <el-input
+                  v-model="eventContent"
+                  type="textarea"
+                  rows="3"
+                  placeholder="请输入事件内容"
+                />
               </el-form-item>
             </el-form>
             <template #footer>
@@ -194,6 +260,7 @@
           <!-- 弹出的小窗 -->
           <el-dialog v-model="dialogVisible" title="日期详情">
             <span>您点击的日期是: {{ selectedDate }}</span>
+            <p>{{ greetingMessage }}</p>
             <template #footer>
               <el-button @click="dialogVisible = false">关闭</el-button>
             </template>
@@ -212,6 +279,58 @@
   <!-- Tags Dialog -->
   <el-dialog v-model="tagDialogOpen" title="任务标签" width="400px">
     <TagDialogInner />
+  </el-dialog>
+  <el-dialog
+    title="创建班级提醒"
+    v-model="taskDialogVisible"
+    width="500px"
+    @close="resetTaskForm"
+  >
+    <el-form :model="taskForm" label-width="100px">
+      <el-form-item label="选择班级" required>
+        <el-select v-model="taskForm.classId" placeholder="请选择班级">
+          <el-option
+            v-for="item in classList"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="提醒名称" required>
+        <el-input v-model="taskForm.name" placeholder="请输入提醒名称" />
+      </el-form-item>
+      <el-form-item label="提醒内容" required>
+        <el-input
+          v-model="taskForm.content"
+          type="textarea"
+          rows="3"
+          placeholder="请输入提醒内容"
+        />
+      </el-form-item>
+      <el-form-item label="开始时间" required>
+        <el-date-picker
+          v-model="taskForm.startTime"
+          type="datetime"
+          placeholder="选择开始时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+      <el-form-item label="结束时间" required>
+        <el-date-picker
+          v-model="taskForm.endTime"
+          type="datetime"
+          placeholder="选择结束时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="taskDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="createTask">确定</el-button>
+    </template>
   </el-dialog>
 </template>
 
@@ -248,6 +367,18 @@ export default {
       eventEnd: "",
       eventContent: "",
       tagDialogOpen: false,
+      taskDialogVisible: false,
+      taskForm: {
+        name: "",
+        content: "",
+        startTime: "",
+        endTime: "",
+        classId: "", // 选中的班级ID
+      },
+      classList: [], // 班级列表
+      taskList: [], // 存储任务列表
+      showTaskList: false, // 控制任务列表的显示
+      greetingMessage: "", // 添加问候信息的状态
     };
   },
   mounted() {
@@ -276,22 +407,25 @@ export default {
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventStart) &&
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(this.eventEnd)
       ) {
-        // this.$refs.calendar.createEvent(this.eventDate, 120, {
-        //   title: this.eventName,
-        //   content: "yay! 🎉",
-        //   class: "blue-event",
-        // });
-        this.$apis.createEvent(
-          this.eventStart,
-          this.eventEnd,
-          this.eventName,
-          this.eventContent
-        );
-        this.eventDialogVisible = false;
-        this.resetDialogFields();
-        this.updateEvents();
-      } else {
-        this.$message.error("日期格式不正确，请按 YYYY-MM-DD HH:mm 格式输入。");
+        this.$apis
+          .createEvent(
+            this.eventStart,
+            this.eventEnd,
+            this.eventName,
+            this.eventContent
+          )
+          .then(() => {
+            // 等待创建成功后再更新事件列表
+            return this.updateEvents();
+          })
+          .then(() => {
+            this.eventDialogVisible = false;
+            this.resetDialogFields();
+            this.$message.success("事件创建成功");
+          })
+          .catch((error) => {
+            this.$message.error(`创建失败：${error.message}`);
+          });
       }
     },
     transferToStudent() {
@@ -300,9 +434,29 @@ export default {
       this.$forceUpdate();
     },
     handleDateClick(date) {
-      console.log("日期点击事件触发: ", date); // 调试信息
-      this.selectedDate = date; // 获取点击的日期
-      this.dialogVisible = true; // 显示 dialog
+      console.log("日期点击事件触发: ", date);
+      this.selectedDate = date;
+      this.greetingMessage = this.generateGreeting(date); // 生成问候信息
+      this.dialogVisible = true;
+    },
+    generateGreeting(date) {
+      const hour = new Date(date).getHours();
+      let greeting = "祝你有美好的一天！";
+
+      if (hour < 12) {
+        greeting = "早上好！新的一天，新的开始！";
+      } else if (hour < 18) {
+        greeting = "下午好！继续加油！";
+      } else {
+        greeting = "晚上好！辛苦了一天，注意休息！";
+      }
+
+      const day = new Date(date).getDay();
+      if (day === 0 || day === 6) {
+        greeting += " 周末愉快！";
+      }
+
+      return greeting;
     },
     // 路由跳转方法,一些信息应该可以不跳转，直接就展示出来
     goToProfile() {
@@ -315,7 +469,13 @@ export default {
       this.tagDialogOpen = true;
     },
     goToActivities() {
-      this.$router.push({ path: "/activity" });
+      // 教师创建活动
+      if (this.$var.auth.role === "teacher") {
+        this.taskDialogVisible = true;
+        this.getClassList();
+      } else {
+        this.$router.push({ path: "/activity" });
+      }
     },
     /**
      * @deprecated use `goToActivities` instead
@@ -324,11 +484,17 @@ export default {
       this.$router.push({ path: "/school-activities" });
     },
     goToDDL() {
-      this.$router.push({ path: "/ddl" });
+      this.showTaskList = true;
+      this.getTaskList();
+    },
+    getTaskList() {
+      this.$apis.getTaskList().then((response) => {
+        this.taskList = response.data.tasks;
+      });
     },
     updateUser() {
       this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
-        this.username = response.data.username;
+        this.username = response.data.name || response.data.username;
         this.userAvatar = response.data.avatar;
         console.log(response.data.username);
       });
@@ -364,11 +530,72 @@ export default {
       }
       this.message_drawer = true;
     },
+    // 获取班级列表
+    getClassList() {
+      this.$apis.getClassList().then((response) => {
+        this.classList = response.data.class;
+      });
+    },
+    // 创建任务
+    createTask() {
+      if (!this.taskForm.classId) {
+        this.$message.error("请选择班级");
+        return;
+      }
+
+      if (
+        !this.taskForm.name ||
+        !this.taskForm.content ||
+        !this.taskForm.startTime ||
+        !this.taskForm.endTime
+      ) {
+        this.$message.error("请填写完整信息");
+        return;
+      }
+
+      this.$apis
+        .createTask({
+          name: this.taskForm.name,
+          content: this.taskForm.content,
+          startTime: this.taskForm.startTime,
+          endTime: this.taskForm.endTime,
+          classId: this.taskForm.classId,
+        })
+        .then(() => {
+          this.$message.success("创建成功");
+          this.taskDialogVisible = false;
+          this.resetTaskForm();
+        })
+        .catch((error) => {
+          this.$message.error("创建失败：" + error.message);
+        });
+    },
+    // 重置表单
+    resetTaskForm() {
+      this.taskForm = {
+        name: "",
+        content: "",
+        startTime: "",
+        endTime: "",
+        classId: "",
+      };
+    },
+    // 计算进度条百分比
+    calculateProgress(startTime, endTime) {
+      const start = new Date(startTime).getTime();
+      const end = new Date(endTime).getTime();
+      const now = new Date().getTime();
+
+      if (now < start) return 0;
+      if (now > end) return 100;
+
+      return Math.round(((now - start) / (end - start)) * 100);
+    },
   },
 };
 </script>
 
-<style scope>
+<style scoped>
 .calendar-view,
 .el-container,
 #app,
@@ -397,5 +624,221 @@ html {
 .doctor-2 {
   background-color: #f0f6ff;
   color: #689bee;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-content {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.task-time {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 12px;
+}
+
+.app-aside {
+  background-color: #fafafa;
+  border-right: 1px solid #eaeaea;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.back-button {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.task-scrollbar {
+  padding: 0 10px;
+}
+
+.task-item {
+  margin: 16px 0;
+}
+
+.task-card {
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  margin-bottom: 8px;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.deadline-tag {
+  background-color: #f6f8ff;
+  color: #409eff;
+  border: 1px solid #d9ecff;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.task-content {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+  padding: 16px 0;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.el-progress {
+  margin: 16px 0;
+}
+
+.task-time {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.el-link {
+  font-size: 15px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.el-link:hover {
+  background-color: #ecf5ff;
+  color: #409eff;
+}
+
+:deep(.el-progress-bar__outer) {
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  height: 6px !important;
+}
+
+:deep(.el-progress-bar__inner) {
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.task-scrollbar :deep(.el-scrollbar__bar) {
+  width: 6px;
+}
+
+.task-scrollbar :deep(.el-scrollbar__thumb) {
+  background-color: #ccc;
+  opacity: 0.3;
+}
+
+.task-scrollbar :deep(.el-scrollbar__thumb:hover) {
+  opacity: 0.5;
+}
+
+.aside-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.aside-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+}
+
+.menu-list {
+  padding: 12px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #f0f6ff;
+}
+
+.menu-item i {
+  font-size: 18px;
+  margin-right: 12px;
+  color: #666;
+}
+
+.menu-item span {
+  font-size: 14px;
+  color: #333;
+}
+
+.create-schedule-btn {
+  background: linear-gradient(45deg, #4caf50, #45a049);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
+.create-schedule-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  background: linear-gradient(45deg, #45a049, #4caf50);
+}
+
+.create-schedule-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 30px;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.el-date-picker) {
+  width: 100%;
+}
+
+:deep(.el-textarea__inner) {
+  min-height: 80px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 10px 30px 20px;
+  border-top: 1px solid #eee;
 }
 </style>
