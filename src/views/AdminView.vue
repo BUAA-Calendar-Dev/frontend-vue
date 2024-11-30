@@ -73,10 +73,10 @@
     <el-divider> 发布新的活动 </el-divider>
     <div class="new-activity-form">
       <el-form :model="newActivityForm" label-width="100px">
-        <el-form-item label="活动标题" required>
+        <el-form-item label="活动名称" required>
           <el-input
-            v-model="newActivityForm.title"
-            placeholder="请输入活动标题"
+            v-model="newActivityForm.name"
+            placeholder="请输入活动名称"
           />
         </el-form-item>
 
@@ -101,7 +101,6 @@
             value-format="YYYY-MM-DD HH:mm"
             :disabled-date="disablePastDates"
             :shortcuts="dateShortcuts"
-            :disabled-time="disableEndTimeBeforeStart"
           />
         </el-form-item>
 
@@ -305,7 +304,7 @@ export default {
         },
       ],
       newActivityForm: {
-        title: "",
+        name: "",
         content: "",
         start: "",
         end: "",
@@ -526,9 +525,9 @@ export default {
     },
 
     handleCreateSubmit() {
-      // 验证表单
-      if (!this.newActivityForm.title.trim()) {
-        this.$message.error("请输入活动标题");
+      // 表单验证
+      if (!this.newActivityForm.name.trim()) {
+        this.$message.error("请输入活动名称");
         return;
       }
       if (!this.newActivityForm.start) {
@@ -556,7 +555,7 @@ export default {
       // 调用创建活动的 API
       this.$apis
         .createActivity({
-          title: this.newActivityForm.title,
+          name: this.newActivityForm.name,
           content: this.newActivityForm.content,
           start: this.newActivityForm.start,
           end: this.newActivityForm.end,
@@ -564,14 +563,14 @@ export default {
         .then(() => {
           this.$message.success("活动创建成功");
           this.resetNewActivityForm();
-          this.updateList(); // 刷新活动列表
+          this.updateList();
         })
         .catch(this.$utils.handleHttpException);
     },
 
     resetNewActivityForm() {
       this.newActivityForm = {
-        title: "",
+        name: "",
         content: "",
         start: "",
         end: "",
