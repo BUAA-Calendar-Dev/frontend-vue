@@ -58,8 +58,17 @@
               <el-button type="primary" @click="login('student')"
                 >登录为学生</el-button
               >
-              <el-button type="primary" @click="login('teacher')"
+              <el-button
+                v-if="formData.username !== 'admin'"
+                type="primary"
+                @click="login('teacher')"
                 >登录为教师</el-button
+              >
+              <el-button
+                v-if="formData.username === 'admin'"
+                type="primary"
+                @click="login('admin')"
+                >登录为管理员</el-button
               >
             </div>
           </el-form-item>
@@ -355,7 +364,11 @@ export default {
               role,
               response.data.user_id
             );
-            this.$router.push({ path: "/home" });
+            if (role === "admin") {
+              this.$router.push({ path: "/admin" });
+            } else {
+              this.$router.push({ path: "/home" });
+            }
           })
           .catch(this.$utils.handleHttpException);
       });
