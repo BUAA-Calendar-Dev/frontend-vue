@@ -384,10 +384,12 @@ export default {
     if (!this.$var.auth.isValid()) {
       ElMessageBox.alert("登录失效！", { type: "warning" });
       this.$router.push({ path: "/" });
+      return;
     }
     if (this.$var.auth.role !== "admin") {
       ElMessageBox.alert("非法访问！", { type: "warning" });
       this.$router.push({ path: "/" });
+      return;
     }
     this.updateList();
     this.updateClassList();
