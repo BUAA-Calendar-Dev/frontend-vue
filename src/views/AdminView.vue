@@ -1,6 +1,15 @@
 <template>
-  <div class="custom-style">
-    <el-segmented v-model="navChoosed" :options="navOptions" />
+  <div class="admin-header">
+    <div class="action-section">
+      <el-button type="danger" @click="handleLogout">
+        <el-icon><SwitchButton /></el-icon>
+        退出登录
+      </el-button>
+    </div>
+    <div class="nav-section">
+      <el-segmented v-model="navChoosed" :options="navOptions" />
+    </div>
+    <div class="action-section-placeholder"></div>
   </div>
   <div class="main activity-main" v-if="navChoosed == '活动管理'">
     <el-divider> 已发布的活动 </el-divider>
@@ -486,12 +495,13 @@
 
 <script>
 import { ElMessageBox } from "element-plus";
-import { Search } from "@element-plus/icons-vue";
+import { Search, SwitchButton } from "@element-plus/icons-vue";
 
 export default {
   name: "AdminView",
   components: {
     Search,
+    SwitchButton,
   },
   data() {
     // 密码验证规则
@@ -1234,6 +1244,29 @@ export default {
         this.resettingPassword = false;
       }
     },
+
+    async handleLogout() {
+      try {
+        await this.$confirm("确定要退出登录吗？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
+
+        // 清除登录状态
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
+
+        // 跳转到登录页
+        this.$router.push("/");
+
+        this.$message.success("已退出登录");
+      } catch (error) {
+        if (error !== "cancel") {
+          this.$utils.handleHttpException(error);
+        }
+      }
+    },
   },
 };
 </script>
@@ -1488,5 +1521,47 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.admin-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* 三列布局：左侧、导航、右侧占位 */
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.nav-section {
+  /* 导航居中 */
+  display: flex;
+  justify-content: center;
+}
+
+.action-section {
+  /* 退出按钮靠左 */
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 20px;
+}
+
+.action-section-placeholder {
+  /* 右侧占位，保持对称 */
+  width: 100px; /* 与退出按钮宽度大致相同 */
+}
+
+.action-section .el-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+:deep(.el-segmented-control) {
+  /* 可选：调整导航组件样式 */
+  font-size: 16px;
+}
+
+:deep(.el-icon) {
+  vertical-align: middle;
 }
 </style>
