@@ -190,7 +190,17 @@
           </el-main>
         </el-header>
         <el-main style="background-color: honeydew">
+          <!-- 添加视图切换按钮 -->
+          <div class="view-switch">
+            <el-radio-group v-model="viewMode" size="large">
+              <el-radio-button label="calendar">日历视图</el-radio-button>
+              <el-radio-button label="list">列表视图</el-radio-button>
+            </el-radio-group>
+          </div>
+
+          <!-- 日历视图 -->
           <vue-cal
+            v-if="viewMode === 'calendar'"
             ref="calendar"
             locale="zh-cn"
             @cell-click="handleDateClick"
@@ -214,6 +224,88 @@
               </el-button-group>
             </template>
           </vue-cal>
+
+          <!-- 列表视图 -->
+          <div v-else class="task-list-view">
+            <el-table
+              :data="sortedEvents"
+              style="width: 100%"
+              :default-sort="{ prop: 'end', order: 'ascending' }"
+            >
+              <el-table-column label="任务名称" prop="title" min-width="150">
+                <template #default="scope">
+                  <div class="task-title">
+                    {{ scope.row.title }}
+                    <el-tag
+                      size="small"
+                      :type="getStatusType(scope.row)"
+                      class="status-tag"
+                    >
+                      {{ getStatusText(scope.row) }}
+                    </el-tag>
+                  </div>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="类型" width="100">
+                <template #default="scope">
+                  <el-tag
+                    :type="
+                      scope.row.type === 'activity' ? 'success' : 'primary'
+                    "
+                    size="small"
+                  >
+                    {{ scope.row.type === "activity" ? "活动" : "任务" }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="内容" prop="content" min-width="200">
+                <template #default="scope">
+                  <el-tooltip
+                    :content="scope.row.content"
+                    placement="top"
+                    :hide-after="500"
+                  >
+                    <div class="content-cell">{{ scope.row.content }}</div>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+
+              <el-table-column
+                label="开始时间"
+                prop="startTime"
+                min-width="160"
+              >
+                <template #default="scope">
+                  {{ formatDateTime(scope.row.start) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column
+                label="结束时间"
+                prop="endTime"
+                min-width="160"
+                sortable
+              >
+                <template #default="scope">
+                  {{ formatDateTime(scope.row.end) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column label="进度" width="200">
+                <template #default="scope">
+                  <el-progress
+                    :percentage="
+                      calculateProgress(scope.row.start, scope.row.end)
+                    "
+                    :status="getProgressStatus(scope.row)"
+                  />
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
           <!-- 弹窗：创建新事件 -->
           <el-dialog
             title="创建新事件"
@@ -379,7 +471,44 @@ export default {
       taskList: [], // 存储任务列表
       showTaskList: false, // 控制任务列表的显示
       greetingMessage: "", // 添加问候信息的状态
+      viewMode: "calendar", // 添加视图模式控制
+      activities: [], // 添加活动列表数据
+      loading: false, // 添加加载状态
     };
+  },
+  computed: {
+    sortedEvents() {
+      const formatDate = (date) => {
+        if (!date) return null;
+        return new Date(date).toISOString().slice(0, 16).replace("T", " ");
+      };
+
+      const allEvents = [
+        ...this.events.map((event) => ({
+          ...event,
+          type: "activity",
+          start: formatDate(event.startTime || event.start || event.from),
+          end: formatDate(event.endTime || event.end || event.to),
+        })),
+        ...this.specialHours.map((task) => ({
+          ...task,
+          type: "task",
+          start: formatDate(task.startTime || task.start || task.from),
+          end: formatDate(task.endTime || task.end || task.to),
+        })),
+      ];
+
+      // 按结束时间排序
+      const sortedEvents = allEvents.sort((a, b) => {
+        const aEnd = new Date(a.end);
+        const bEnd = new Date(b.end);
+        return aEnd - bEnd;
+      });
+
+      console.log("sortedEvents:", sortedEvents);
+
+      return sortedEvents;
+    },
   },
   mounted() {
     if (!this.$var.auth.isValid()) {
@@ -390,8 +519,17 @@ export default {
       this.updateMessage();
     }
     this.updateUser();
-    this.updateSpecialHours();
-    this.updateEvents();
+    this.updateEvents(); // 只需要调用一次，会同时获取活动和任务数据
+  },
+  watch: {
+    // 监听视图模式变化
+    viewMode: {
+      handler() {
+        // 切换视图时刷新数据
+        this.updateEvents();
+      },
+      immediate: false, // 不需要在初始化时执行
+    },
   },
   methods: {
     customEventCreation() {
@@ -499,15 +637,23 @@ export default {
         console.log(response.data.username);
       });
     },
-    updateSpecialHours() {
-      this.$apis.getEvent().then((response) => {
-        this.specialHours = response.data.specialHours;
-      });
-    },
-    updateEvents() {
-      this.$apis.getEvent().then((response) => {
-        this.events = response.data.events;
-      });
+    async updateEvents() {
+      try {
+        this.loading = true;
+        const response = await this.$apis.getEvent();
+        // 确保数据存在且是数组
+        this.events = response.data.events || [];
+        this.specialHours = response.data.specialHours || [];
+        console.log("Updated events:", this.events);
+        console.log("Updated specialHours:", this.specialHours);
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+        // 出错时清空数据
+        this.events = [];
+        this.specialHours = [];
+      } finally {
+        this.loading = false;
+      }
     },
     updateMessage() {
       this.$apis.getMessageList().then((response) => {
@@ -591,6 +737,41 @@ export default {
 
       return Math.round(((now - start) / (end - start)) * 100);
     },
+    formatDateTime(dateTime) {
+      return new Date(dateTime).toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+
+    getStatusType(item) {
+      const now = new Date();
+      const startTime = new Date(item.start || item.startTime);
+      const endTime = new Date(item.end || item.endTime);
+
+      if (now < startTime) return "info";
+      if (now > endTime) return "danger";
+      return "success";
+    },
+
+    getStatusText(item) {
+      const now = new Date();
+      const startTime = new Date(item.start || item.startTime);
+      const endTime = new Date(item.end || item.endTime);
+
+      if (now < startTime) return "未开始";
+      if (now > endTime) return "已结束";
+      return "进行中";
+    },
+
+    getProgressStatus(task) {
+      const progress = this.calculateProgress(task.startTime, task.endTime);
+      if (progress >= 100) return "success";
+      return "";
+    },
   },
 };
 </script>
@@ -605,6 +786,7 @@ html {
   height: 100%;
   margin: 0;
 }
+
 .vuecal__special-hours {
   display: flex;
   justify-content: center;
@@ -621,6 +803,7 @@ html {
   background-color: #f0fff1;
   color: #81d58b;
 }
+
 .doctor-2 {
   background-color: #f0f6ff;
   color: #689bee;
@@ -840,5 +1023,57 @@ html {
 :deep(.el-dialog__footer) {
   padding: 10px 30px 20px;
   border-top: 1px solid #eee;
+}
+
+.view-switch {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.task-list-view {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.task-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-tag {
+  font-size: 12px;
+}
+
+.content-cell {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:deep(.el-table) {
+  --el-table-border-color: #ebeef5;
+  --el-table-header-bg-color: #f5f7fa;
+}
+
+:deep(.el-table__header) {
+  font-weight: 600;
+}
+
+:deep(.el-table__row) {
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f5f7fa;
+}
+
+:deep(.el-progress) {
+  margin: 0;
 }
 </style>
