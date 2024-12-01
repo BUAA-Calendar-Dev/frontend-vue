@@ -9,7 +9,14 @@ import {
   updateAvatar,
   changePassword,
 } from "@/apis/userinfo";
-import { getTaskList, createTask } from "@/apis/tasks";
+import {
+  getTaskList,
+  createTask,
+  assignTaskToUser,
+  assignTaskToClass,
+  assignTaskToSchool,
+  updateTaskStatus,
+} from "@/apis/tasks";
 import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
 import {
   getActivityList,
@@ -236,6 +243,21 @@ export default new (class {
     this.createTask = createTask;
 
     /**
+     * post '/api/task/{id}/user'
+     */
+    this.assignTaskToUser = assignTaskToUser;
+
+    /**
+     * post '/api/task/{id}/class'
+     */
+    this.assignTaskToClass = assignTaskToClass;
+
+    /**
+     * post '/api/task/{id}/school'
+     */
+    this.assignTaskToSchool = assignTaskToSchool;
+
+    /**
      * post '/api/user/avatar'
      */
     this.updateAvatar = updateAvatar;
@@ -274,5 +296,11 @@ export default new (class {
      * get '/api/user/list'
      */
     this.getAllUsers = getAllUsers;
+
+    /**
+     * 更新任务状态
+     * post '/api/task/{id}/status'
+     */
+    this.updateTaskStatus = updateTaskStatus;
   }
 })();

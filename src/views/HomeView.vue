@@ -31,30 +31,26 @@
                     <div class="task-header">
                       <span>{{ task.name }}</span>
                       <el-tag size="small" class="deadline-tag">
-                        {{ new Date(task.endTime).toLocaleDateString() }}
+                        {{ new Date(task.end).toLocaleDateString() }}
                       </el-tag>
                     </div>
                   </template>
                   <div class="task-content">
                     <p>{{ task.content }}</p>
                     <el-progress
-                      :percentage="
-                        calculateProgress(task.startTime, task.endTime)
-                      "
+                      :percentage="calculateProgress(task.start, task.end)"
                       :status="
-                        calculateProgress(task.startTime, task.endTime) >= 100
+                        calculateProgress(task.start, task.end) >= 100
                           ? 'success'
                           : ''
                       "
                     />
                     <div class="task-time">
                       <span
-                        >开始:
-                        {{ new Date(task.startTime).toLocaleString() }}</span
+                        >开始: {{ new Date(task.start).toLocaleString() }}</span
                       >
                       <span
-                        >结束:
-                        {{ new Date(task.endTime).toLocaleString() }}</span
+                        >结束: {{ new Date(task.end).toLocaleString() }}</span
                       >
                     </div>
                   </div>
@@ -272,28 +268,24 @@
                 </template>
               </el-table-column>
 
-              <el-table-column
-                label="开始时间"
-                prop="startTime"
-                min-width="160"
-              >
+              <el-table-column label="开始时间" prop="start" min-width="160">
                 <template #default="scope">
-                  {{ formatDateTime(scope.row.start) }}
+                  {{ new Date(scope.row.start).toLocaleString() }}
                 </template>
               </el-table-column>
 
               <el-table-column
                 label="结束时间"
-                prop="endTime"
+                prop="end"
                 min-width="160"
                 sortable
               >
                 <template #default="scope">
-                  {{ formatDateTime(scope.row.end) }}
+                  {{ new Date(scope.row.end).toLocaleString() }}
                 </template>
               </el-table-column>
 
-              <el-table-column label="进度" width="200">
+              <el-table-column label="DDL进度" width="200">
                 <template #default="scope">
                   <el-progress
                     :percentage="
@@ -301,6 +293,26 @@
                     "
                     :status="getProgressStatus(scope.row)"
                   />
+                </template>
+              </el-table-column>
+
+              <!-- 在进度列之后添加完成状态列 -->
+              <el-table-column
+                label="状态"
+                width="100"
+                v-if="$var.auth.role === 'student'"
+              >
+                <template #default="scope">
+                  <el-checkbox
+                    v-if="scope.row.type === 'task'"
+                    v-model="scope.row.completed"
+                    @change="handleTaskComplete(scope.row)"
+                    :disabled="
+                      calculateProgress(scope.row.start, scope.row.end) >= 100
+                    "
+                  >
+                    完成
+                  </el-checkbox>
                 </template>
               </el-table-column>
             </el-table>
@@ -390,7 +402,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="提醒名称" required>
-        <el-input v-model="taskForm.name" placeholder="请输入提醒名称" />
+        <el-input v-model="taskForm.title" placeholder="请输入提醒名称" />
       </el-form-item>
       <el-form-item label="提醒内容" required>
         <el-input
@@ -402,7 +414,7 @@
       </el-form-item>
       <el-form-item label="开始时间" required>
         <el-date-picker
-          v-model="taskForm.startTime"
+          v-model="taskForm.start"
           type="datetime"
           placeholder="选择开始时间"
           format="YYYY-MM-DD HH:mm"
@@ -411,7 +423,7 @@
       </el-form-item>
       <el-form-item label="结束时间" required>
         <el-date-picker
-          v-model="taskForm.endTime"
+          v-model="taskForm.end"
           type="datetime"
           placeholder="选择结束时间"
           format="YYYY-MM-DD HH:mm"
@@ -421,7 +433,7 @@
     </el-form>
     <template #footer>
       <el-button @click="taskDialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="createTask">确定</el-button>
+      <el-button type="primary" @click="assignTaskToClass">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -461,10 +473,10 @@ export default {
       tagDialogOpen: false,
       taskDialogVisible: false,
       taskForm: {
-        name: "",
+        title: "",
         content: "",
-        startTime: "",
-        endTime: "",
+        start: "",
+        end: "",
         classId: "", // 选中的班级ID
       },
       classList: [], // 班级列表
@@ -478,23 +490,20 @@ export default {
   },
   computed: {
     sortedEvents() {
-      const formatDate = (date) => {
-        if (!date) return null;
-        return new Date(date).toISOString().slice(0, 16).replace("T", " ");
-      };
-
       const allEvents = [
         ...this.events.map((event) => ({
           ...event,
           type: "activity",
-          start: formatDate(event.startTime || event.start || event.from),
-          end: formatDate(event.endTime || event.end || event.to),
+          start: event.start || event.startTime || event.from,
+          end: event.end || event.endTime || event.to,
         })),
         ...this.specialHours.map((task) => ({
           ...task,
           type: "task",
-          start: formatDate(task.startTime || task.start || task.from),
-          end: formatDate(task.endTime || task.end || task.to),
+          title: task.title || task.name || task.class,
+          content: task.content || task.label,
+          start: task.start || task.startTime || task.from,
+          end: task.end || task.endTime || task.to,
         })),
       ];
 
@@ -505,6 +514,7 @@ export default {
         return aEnd - bEnd;
       });
 
+      console.log("specialHours raw:", this.specialHours);
       console.log("sortedEvents:", sortedEvents);
 
       return sortedEvents;
@@ -683,29 +693,28 @@ export default {
       });
     },
     // 创建任务
-    createTask() {
+    assignTaskToClass() {
       if (!this.taskForm.classId) {
         this.$message.error("请选择班级");
         return;
       }
 
       if (
-        !this.taskForm.name ||
+        !this.taskForm.title ||
         !this.taskForm.content ||
-        !this.taskForm.startTime ||
-        !this.taskForm.endTime
+        !this.taskForm.start ||
+        !this.taskForm.end
       ) {
         this.$message.error("请填写完整信息");
         return;
       }
 
       this.$apis
-        .createTask({
-          name: this.taskForm.name,
+        .assignTaskToClass(this.taskForm.classId, {
+          title: this.taskForm.title,
           content: this.taskForm.content,
-          startTime: this.taskForm.startTime,
-          endTime: this.taskForm.endTime,
-          classId: this.taskForm.classId,
+          start: this.taskForm.start,
+          end: this.taskForm.end,
         })
         .then(() => {
           this.$message.success("创建成功");
@@ -719,58 +728,71 @@ export default {
     // 重置表单
     resetTaskForm() {
       this.taskForm = {
-        name: "",
+        title: "",
         content: "",
-        startTime: "",
-        endTime: "",
+        start: "",
+        end: "",
         classId: "",
       };
     },
     // 计算进度条百分比
     calculateProgress(startTime, endTime) {
-      const start = new Date(startTime).getTime();
-      const end = new Date(endTime).getTime();
+      const startDate = new Date(startTime).getTime();
+      const endDate = new Date(endTime).getTime();
       const now = new Date().getTime();
 
-      if (now < start) return 0;
-      if (now > end) return 100;
+      if (now < startDate) return 0;
+      if (now > endDate) return 100;
 
-      return Math.round(((now - start) / (end - start)) * 100);
+      return Math.round(((now - startDate) / (endDate - startDate)) * 100);
     },
     formatDateTime(dateTime) {
-      return new Date(dateTime).toLocaleString("zh-CN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      return new Date(dateTime).toLocaleString();
     },
 
     getStatusType(item) {
       const now = new Date();
-      const startTime = new Date(item.start || item.startTime);
-      const endTime = new Date(item.end || item.endTime);
+      const start = new Date(item.start || item.start);
+      const end = new Date(item.end || item.end);
 
-      if (now < startTime) return "info";
-      if (now > endTime) return "danger";
+      if (now < start) return "info";
+      if (now > end) return "danger";
       return "success";
     },
 
     getStatusText(item) {
       const now = new Date();
-      const startTime = new Date(item.start || item.startTime);
-      const endTime = new Date(item.end || item.endTime);
+      const start = new Date(item.start || item.start);
+      const end = new Date(item.end || item.end);
 
-      if (now < startTime) return "未开始";
-      if (now > endTime) return "已结束";
+      if (now < start) return "未开始";
+      if (now > end) return "已结束";
       return "进行中";
     },
 
     getProgressStatus(task) {
-      const progress = this.calculateProgress(task.startTime, task.endTime);
+      if (task.type === "task" && task.completed) {
+        return "success";
+      }
+      const progress = this.calculateProgress(task.start, task.end);
       if (progress >= 100) return "success";
       return "";
+    },
+
+    async handleTaskComplete(task) {
+      try {
+        await this.$apis.updateTaskStatus(task.id, {
+          percentage: task.completed ? 100 : 0,
+        });
+
+        this.$message.success(task.completed ? "任务已完成" : "已取消完成状态");
+        // 刷新数据
+        await this.updateEvents();
+      } catch (error) {
+        // 恢复状态
+        task.completed = !task.completed;
+        this.$utils.handleHttpException(error);
+      }
     },
   },
 };
