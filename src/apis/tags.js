@@ -15,9 +15,10 @@ export function deleteTag(id) {
   return axios.post(process.env.VUE_APP_ROOT_URL + `/api/tag/${id}/delete`);
 }
 
-export function newTag(title, color) {
-  return axios.put(process.env.VUE_APP_ROOT_URL + `/api/tag/info`, {
+export function newTag(title, color, content) {
+  return axios.post(process.env.VUE_APP_ROOT_URL + `/api/tag/new`, {
     title: title,
     color: color,
+    content: content,
   });
 }
