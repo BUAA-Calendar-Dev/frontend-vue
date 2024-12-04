@@ -1,4 +1,6 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+import ActivitySchoolView from "@/views/ActivitySchoolView.vue";
+import ActivityPickedView from "@/views/ActivityPickedView.vue";
 
 const routes = [
   {
@@ -38,13 +40,13 @@ const routes = [
     children: [
       {
         path: "school",
-        name: "school",
-        component: () => import("../views/ActivityItem/SchoolActivityView.vue"),
+        name: "activity-school",
+        component: ActivitySchoolView,
       },
       {
         path: "picked",
-        name: "picked",
-        component: () => import("../views/ActivityItem/PickedActivityView.vue"),
+        name: "activity-picked",
+        component: ActivityPickedView,
       },
     ],
   },

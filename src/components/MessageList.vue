@@ -50,9 +50,19 @@ export default {
   methods: {
     onRead(id) {
       console.log("mark read the message with id " + id);
-      this.$apis.setReadMessage(id).then(() => {
-        this.update();
-      });
+      this.$apis
+        .setReadMessage(id)
+        .then(() => {
+          this.$message({
+            message: "已标记为已读",
+            type: "success",
+            duration: 2000,
+          });
+          this.update();
+        })
+        .catch((error) => {
+          this.$utils.handleHttpException(error);
+        });
     },
   },
 };
