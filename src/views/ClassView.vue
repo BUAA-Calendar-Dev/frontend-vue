@@ -28,29 +28,28 @@
           :key="index"
           style="margin-bottom: 15px"
         >
-          <el-card class="class-card">
-            <h2 style="text-align: left">{{ item.name }}</h2>
-            <div style="color: gray; text-align: left">
-              班级共有 {{ item.count }} 位学生
+          <el-card class="class-card" shadow="hover">
+            <div class="class-info">
+              <div class="class-header">
+                <h2 class="class-name">{{ item.name }}</h2>
+                <div class="class-introduction" v-if="item.introduction">
+                  {{ item.introduction }}
+                </div>
+              </div>
+              <div class="class-detail">
+                <div class="student-count">
+                  <el-icon><User /></el-icon>
+                  <span>{{ item.count }} 位学生</span>
+                </div>
+                <div class="teacher-list">
+                  <span class="label">班级教师：</span>
+                  <div class="teacher-names">
+                    {{ item.teacher.join("、") }}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div style="color: gray; text-align: left">班级教师：</div>
-            <div
-              style="
-                color: gray;
-                text-align: left;
-                margin-top: 3px;
-                font-weight: bold;
-              "
-            >
-              <span
-                style="color: gray; text-align: left; margin-right: 3px"
-                v-for="(itemTeacher, index) in item.teacher"
-                :key="index"
-              >
-                {{ itemTeacher }};
-              </span>
-            </div>
-            <div style="text-align: right">
+            <div class="class-actions">
               <el-button
                 v-if="$var.auth.role == 'student'"
                 type="primary"
@@ -58,58 +57,76 @@
               >
                 查看班级任务
               </el-button>
-              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
-                管理班级
-              </el-button>
-              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
-                布置班级任务
-              </el-button>
-              <el-button v-if="$var.auth.role == 'teacher'" type="primary">
-                发布班级消息
-              </el-button>
+              <template v-if="$var.auth.role == 'teacher'">
+                <el-button type="primary">管理班级</el-button>
+                <el-button type="primary">布置班级任务</el-button>
+                <el-button type="primary">发布班级消息</el-button>
+              </template>
             </div>
           </el-card>
         </el-col>
       </el-row>
     </el-container>
-    <el-dialog v-model="showDDLList" title="班级任务列表" width="800">
-      <el-table :data="currentDDLList" style="width: 100%" align="center">
+    <el-dialog
+      v-model="showDDLList"
+      title="班级任务列表"
+      width="90%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+      align-center
+    >
+      <el-table
+        :data="currentDDLList"
+        style="width: 100%"
+        align="center"
+        :max-height="tableHeight"
+        border
+      >
         <el-table-column
-          property="task-name"
-          label="名称"
-          width="150"
+          property="title"
+          label="任务名称"
+          min-width="120"
           show-overflow-tooltip
         />
         <el-table-column
-          property="task-time"
-          label="DDL"
-          width="300"
+          property="content"
+          label="任务内容"
+          min-width="200"
           show-overflow-tooltip
-        >
+        />
+        <el-table-column label="时间" min-width="180">
           <template #default="scope">
-            <div>
-              {{
-                $utils.formatTimestamp(
-                  scope.row["task-time"],
-                  $var.timeFormatter
-                )
-              }}
+            <div class="task-time">
+              <el-tag size="small" type="info">
+                {{ new Date(scope.row.start).toLocaleString() }}
+              </el-tag>
+              <el-tag size="small" type="warning">
+                {{ new Date(scope.row.end).toLocaleString() }}
+              </el-tag>
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          property="task-time"
-          label="完成情况"
-          width="300"
-          show-overflow-tooltip
-        >
+        <el-table-column label="标签" min-width="150">
+          <template #default="scope">
+            <div class="task-tags">
+              <el-tag
+                v-for="tag in scope.row.tags"
+                :key="tag"
+                size="small"
+                class="task-tag"
+                type="success"
+              >
+                {{ tag }}
+              </el-tag>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="进度" min-width="180">
           <template #default="scope">
             <el-progress
-              :percentage="scope.row['task-percent']"
-              :stroke-width="15"
-              striped
-              striped-flow
-              :duration="10"
+              :percentage="calculateProgress(scope.row.start, scope.row.end)"
+              :status="getProgressStatus(scope.row)"
+              :stroke-width="12"
             />
           </template>
         </el-table-column>
@@ -156,6 +173,141 @@
 .fake-button:hover {
   background-color: aliceblue;
 }
+
+.task-time {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.task-tags {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.task-tag {
+  white-space: nowrap;
+}
+
+:deep(.el-dialog) {
+  margin-top: 5vh !important;
+}
+
+:deep(.el-dialog__body) {
+  padding: 10px 20px;
+}
+
+:deep(.el-table) {
+  --el-table-header-bg-color: #f5f7fa;
+  --el-table-border-color: #ebeef5;
+}
+
+:deep(.el-table__header-wrapper) {
+  background-color: var(--el-table-header-bg-color);
+}
+
+:deep(.el-table__header th) {
+  background-color: var(--el-table-header-bg-color);
+  color: #606266;
+  font-weight: bold;
+}
+
+:deep(.el-progress) {
+  margin: 0;
+  width: 90%;
+}
+
+.class-card {
+  transition: all 0.3s;
+}
+
+.class-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.class-info {
+  padding: 0 10px;
+}
+
+.class-header {
+  margin-bottom: 15px;
+}
+
+.class-name {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #303133;
+  text-align: left;
+}
+
+.class-introduction {
+  color: #909399;
+  font-size: 14px;
+  text-align: left;
+  line-height: 1.4;
+  margin-top: 5px;
+  /* 超出两行显示省略号 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 当鼠标悬停时显示完整内容 */
+.class-introduction:hover {
+  -webkit-line-clamp: unset;
+  cursor: default;
+}
+
+.class-detail {
+  color: #606266;
+  margin-bottom: 20px;
+}
+
+.student-count {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.teacher-list {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.label {
+  white-space: nowrap;
+  color: #606266;
+}
+
+.teacher-names {
+  color: #409eff;
+  font-weight: 500;
+}
+
+.class-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #ebeef5;
+}
+
+:deep(.el-button) {
+  padding: 8px 15px;
+}
+
+:deep(.el-card__body) {
+  padding: 20px;
+}
 </style>
 
 <script setup>
@@ -172,6 +324,7 @@ export default {
       classList: [],
       currentDDLList: [],
       showDDLList: false,
+      tableHeight: 0,
     };
   },
   methods: {
@@ -184,17 +337,36 @@ export default {
         })
         .catch(this.$utils.handleHttpException);
     },
-    updateClassDDLList(id) {
-      this.currentDDLList = [];
-      this.$apis
-        .getTaskList()
-        .then((response) => {
-          this.currentDDLList = response.data.tasks.filter(
-            (item) => item["class-id"] == id
-          );
-        })
-        .catch(this.$utils.handleHttpException);
-      this.showDDLList = true;
+    calculateProgress(startTime, endTime) {
+      const start = new Date(startTime).getTime();
+      const end = new Date(endTime).getTime();
+      const now = new Date().getTime();
+
+      if (now < start) return 0;
+      if (now > end) return 100;
+
+      return Math.round(((now - start) / (end - start)) * 100);
+    },
+    getProgressStatus(task) {
+      const progress = this.calculateProgress(task.start, task.end);
+      if (progress >= 100) return "danger";
+      if (progress >= 80) return "warning";
+      return "success";
+    },
+    calculateTableHeight() {
+      this.tableHeight = window.innerHeight * 0.7;
+    },
+    async updateClassDDLList(id) {
+      try {
+        const response = await this.$apis.getClassTasks(id);
+        this.currentDDLList = response.data.tasks;
+        this.showDDLList = true;
+        this.$nextTick(() => {
+          this.calculateTableHeight();
+        });
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
     },
   },
   mounted() {
@@ -203,6 +375,10 @@ export default {
       this.$router.push({ path: "/" });
     }
     this.updateClassList();
+    window.addEventListener("resize", this.calculateTableHeight);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.calculateTableHeight);
   },
 };
 </script>
