@@ -82,7 +82,11 @@
       <!-- 活动详情 -->
       <div class="detail-section">
         <h4>活动详情</h4>
-        <div class="detail-content">{{ activity.content }}</div>
+        <div
+          class="detail-content markdown-body"
+          style="font-size: small"
+          v-html="$md.render(activity.content)"
+        ></div>
       </div>
 
       <!-- 活动信息 -->
@@ -636,9 +640,25 @@ export default {
 
 .detail-content {
   color: #606266;
-  line-height: 1.8;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  text-align: left;
+}
+
+.detail-content :deep(p) {
+  text-align: left;
+  margin: 0.2em 0;
+}
+
+.detail-content :deep(h1, h2, h3, h4, h5, h6) {
+  margin: 0.4em 0 0.2em;
+  line-height: 1.4;
+}
+
+.detail-content :deep(ul, ol) {
+  margin: 0.2em 0;
+  padding-left: 1.5em;
 }
 
 .info-grid {

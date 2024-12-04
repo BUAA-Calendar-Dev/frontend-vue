@@ -10,10 +10,16 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@wooorm/starry-night": "^3.5.0",
     "axios": "^1.7.7",
     "core-js": "^3.8.3",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.8.4",
+    "github-markdown-css": "^5.8.1",
+    "hast-util-to-html": "^9.0.3",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "markdown-it-texmath": "^1.0.0",
     "vue": "^3.2.13",
     "vue-cal": "^4.10.0",
     "vue-router": "^4.0.3"
@@ -21,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
+    "@types/markdown-it": "^14.1.2",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
