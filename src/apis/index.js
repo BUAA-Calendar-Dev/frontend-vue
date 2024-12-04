@@ -28,6 +28,7 @@ import {
 } from "@/apis/activity";
 import {
   getClassList,
+  getClassTasks,
   getAvailableStudents,
   getAvailableTeachers,
   addStudentsToClass,
@@ -194,6 +195,11 @@ export default new (class {
      * get '/api/class/info'
      */
     this.getClassList = getClassList;
+
+    /**
+     * 获取班级任务
+     */
+    this.getClassTasks = getClassTasks;
 
     /**
      * 获取可用学生列表

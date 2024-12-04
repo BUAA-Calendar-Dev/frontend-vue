@@ -4,6 +4,10 @@ export function getClassList() {
   return axios.post(`${process.env.VUE_APP_ROOT_URL}/api/class/info`);
 }
 
+export function getClassTasks(classId) {
+  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/class/${classId}/task`);
+}
+
 export function getAvailableStudents() {
   return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/user/students`);
 }
