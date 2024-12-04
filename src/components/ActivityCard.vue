@@ -147,8 +147,17 @@
           >
             <div class="comment-header">
               <div class="comment-info">
-                <span class="comment-author">{{ comment.author }}</span>
-                <span class="comment-time">{{ formatTime(comment.time) }}</span>
+                <el-avatar
+                  :size="32"
+                  :src="comment.avatar"
+                  class="comment-avatar"
+                />
+                <div class="comment-user-info">
+                  <span class="comment-author">{{ comment.author }}</span>
+                  <span class="comment-time">{{
+                    formatTime(comment.time)
+                  }}</span>
+                </div>
               </div>
               <div class="comment-actions">
                 <el-button
@@ -203,10 +212,19 @@
               >
                 <div class="comment-header">
                   <div class="comment-info">
-                    <span class="comment-author">{{ subComment.author }}</span>
-                    <span class="comment-time">{{
-                      formatTime(subComment.time)
-                    }}</span>
+                    <el-avatar
+                      :size="28"
+                      :src="subComment.avatar || '/favicon.ico'"
+                      class="comment-avatar"
+                    />
+                    <div class="comment-user-info">
+                      <span class="comment-author">{{
+                        subComment.author
+                      }}</span>
+                      <span class="comment-time">{{
+                        formatTime(subComment.time)
+                      }}</span>
+                    </div>
                   </div>
                   <div class="comment-actions">
                     <el-button
@@ -745,16 +763,27 @@ export default {
   flex-shrink: 0;
 }
 
+.comment-avatar {
+  flex-shrink: 0;
+}
+
+.comment-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .comment-author {
   font-weight: 500;
   color: #303133;
   font-size: 14px;
+  line-height: 1.2;
 }
 
 .comment-time {
   color: #909399;
   font-size: 12px;
-  white-space: nowrap;
+  line-height: 1;
 }
 
 .comment-actions {
@@ -845,5 +874,44 @@ export default {
   content: "";
   display: table;
   clear: both;
+}
+
+.comment-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+}
+
+.comment-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comment-author {
+  font-weight: 500;
+  color: #303133;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.comment-time {
+  color: #909399;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* 调整二级评论的样式 */
+.sub-comment-item .comment-info {
+  gap: 8px;
+}
+
+.sub-comment-item .comment-author {
+  font-size: 13px;
 }
 </style>

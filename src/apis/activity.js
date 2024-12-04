@@ -70,7 +70,7 @@ export function deleteComment(commentId) {
  */
 export function deleteSubComment(replyId) {
   return axios.post(
-    process.env.VUE_APP_ROOT_URL + `/api/reply/${replyId}/delete`
+    process.env.VUE_APP_ROOT_URL + `/api/comment/${replyId}/delete`
   );
 }
 
