@@ -18,11 +18,20 @@
           <span class="activity-signed-in not-in">未参加</span>
         </div>
         <div class="activity-time">
-          {{ this.$utils.formatTimestamp(item.time, $var.timeFormatter) }}
+          <div v-if="item.content">
+            {{
+              "开始时间: " +
+              item.content.start +
+              "\u00A0\u00A0\u00A0\u00A0结束时间: " +
+              item.content.end
+            }}
+          </div>
         </div>
       </template>
       <div class="activity-detail">
-        {{ item.content }}
+        <div v-if="item.content">
+          {{ item.content.content }}
+        </div>
         <br />
         <el-button
           style="float: right"
