@@ -56,7 +56,7 @@
   <el-dialog
     v-model="dialogVisible"
     :title="activity.name"
-    width="600px"
+    width="800px"
     :close-on-click-modal="false"
     class="activity-dialog"
   >
@@ -112,7 +112,132 @@
           </div>
         </div>
       </div>
+
+      <!-- 评论区域 -->
+      <div class="comment-section">
+        <h4>活动评论</h4>
+
+        <!-- 新增评论输入框 -->
+        <div class="comment-input-section">
+          <el-input
+            v-model="newCommentContent"
+            type="textarea"
+            :rows="3"
+            placeholder="写下你的评论..."
+          />
+          <el-button
+            type="primary"
+            @click="submitComment"
+            :loading="commentSubmitting"
+          >
+            发表评论
+          </el-button>
+        </div>
+
+        <div class="comments-container">
+          <!-- 一级评论 -->
+          <div
+            v-for="comment in comments"
+            :key="comment.id"
+            class="comment-item"
+          >
+            <div class="comment-header">
+              <div class="comment-info">
+                <span class="comment-author">{{ comment.author }}</span>
+                <span class="comment-time">{{ formatTime(comment.time) }}</span>
+              </div>
+              <div class="comment-actions">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="showReplyInput(comment.id)"
+                >
+                  回复
+                </el-button>
+                <el-button
+                  v-if="comment.authorId === currentUserId"
+                  type="text"
+                  size="small"
+                  @click="deleteComment(comment.id)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </div>
+            <div class="comment-content">{{ comment.content }}</div>
+
+            <!-- 回复输入框 -->
+            <div v-if="replyingToId === comment.id" class="reply-input-section">
+              <el-input
+                v-model="replyContent"
+                type="textarea"
+                :rows="2"
+                placeholder="写下你的回复..."
+              />
+              <div class="reply-actions">
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="submitReply(comment.id)"
+                  :loading="replySubmitting"
+                >
+                  提交回复
+                </el-button>
+                <el-button size="small" @click="cancelReply"> 取消 </el-button>
+              </div>
+            </div>
+
+            <!-- 二级评论 -->
+            <div
+              class="sub-comments"
+              v-if="comment.subComments && comment.subComments.length > 0"
+            >
+              <div
+                v-for="subComment in comment.subComments"
+                :key="subComment.id"
+                class="sub-comment-item"
+              >
+                <div class="comment-header">
+                  <div class="comment-info">
+                    <span class="comment-author">{{ subComment.author }}</span>
+                    <span class="comment-time">{{
+                      formatTime(subComment.time)
+                    }}</span>
+                  </div>
+                  <div class="comment-actions">
+                    <el-button
+                      v-if="subComment.authorId === currentUserId"
+                      type="text"
+                      size="small"
+                      @click="deleteSubComment(subComment.id)"
+                    >
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+                <div class="comment-content">{{ subComment.content }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </el-dialog>
+
+  <!-- 删除确认对话框 -->
+  <el-dialog
+    v-model="deleteDialogVisible"
+    title="确认删除"
+    width="300px"
+    :close-on-click-modal="false"
+  >
+    <span>确定要删除这条评论吗？</span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="deleteDialogVisible = false">取消</el-button>
+        <el-button type="danger" @click="confirmDelete">确定</el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 
@@ -153,6 +278,17 @@ export default {
     return {
       loading: false,
       dialogVisible: false,
+      comments: [], // 存储评论数据
+      currentUserId: this.$var.auth.id,
+      deleteDialogVisible: false,
+      deletingCommentId: null,
+      deletingCommentType: null, // 'main' 或 'sub'
+      deleteLoading: false,
+      newCommentContent: "", // 新评论内容
+      replyContent: "", // 回复内容
+      replyingToId: null, // 正在回复的评论ID
+      commentSubmitting: false, // 评论提交状态
+      replySubmitting: false, // 回复提交状态
     };
   },
   computed: {
@@ -202,7 +338,33 @@ export default {
         this.loading = false;
       }
     },
-    showDetails(event) {
+    async fetchComments() {
+      try {
+        const response = await this.$apis.getComment(this.activity.id);
+        // 获取每个一级评论的二级评论
+        const commentsWithReplies = await Promise.all(
+          response.data.comments.map(async (comment) => {
+            try {
+              const subResponse = await this.$apis.getSubComment(comment.id);
+              return {
+                ...comment,
+                subComments: subResponse.data.comments || [],
+              };
+            } catch (error) {
+              console.error("获取二级评论失败:", error);
+              return {
+                ...comment,
+                subComments: [],
+              };
+            }
+          })
+        );
+        this.comments = commentsWithReplies;
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+    async showDetails(event) {
       // 如果点击的是按钮，不显示详情
       if (
         event.target.tagName === "BUTTON" ||
@@ -211,6 +373,128 @@ export default {
         return;
       }
       this.dialogVisible = true;
+      // 获取评论数据
+      await this.fetchComments();
+    },
+    // 删除评论的方法
+    deleteComment(commentId) {
+      this.deletingCommentId = commentId;
+      this.deletingCommentType = "main";
+      this.deleteDialogVisible = true;
+    },
+    // 删除二级评论的方法
+    deleteSubComment(subCommentId) {
+      this.deletingCommentId = subCommentId;
+      this.deletingCommentType = "sub";
+      this.deleteDialogVisible = true;
+    },
+    // 确认删除
+    async confirmDelete() {
+      this.deleteLoading = true;
+      try {
+        if (this.deletingCommentType === "main") {
+          await this.$apis.deleteComment(this.deletingCommentId);
+          // 从评论列表中移除被删除的评论
+          this.comments = this.comments.filter(
+            (comment) => comment.id !== this.deletingCommentId
+          );
+        } else {
+          await this.$apis.deleteSubComment(this.deletingCommentId);
+          // 从二级评论列表中移除被删除的评论
+          this.comments = this.comments.map((comment) => ({
+            ...comment,
+            subComments: comment.subComments.filter(
+              (subComment) => subComment.id !== this.deletingCommentId
+            ),
+          }));
+        }
+
+        this.$message({
+          type: "success",
+          message: "删除成功",
+          duration: 2000,
+        });
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.deleteLoading = false;
+        this.deleteDialogVisible = false;
+        this.deletingCommentId = null;
+        this.deletingCommentType = null;
+      }
+    },
+    // 提交新评论
+    async submitComment() {
+      if (!this.newCommentContent.trim()) {
+        this.$message.warning("请输入评论内容");
+        return;
+      }
+
+      this.commentSubmitting = true;
+      try {
+        const response = await this.$apis.addComment(
+          this.activity.id,
+          this.newCommentContent
+        );
+        if (response.data.code === 0) {
+          // 将新评论添加到列表
+          this.comments.unshift({
+            ...response.data.comment,
+            subComments: [],
+          });
+          this.newCommentContent = ""; // 清空输入框
+          this.$message.success("评论发表成功");
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.commentSubmitting = false;
+      }
+    },
+
+    // 显示回复输入框
+    showReplyInput(commentId) {
+      this.replyingToId = commentId;
+      this.replyContent = "";
+    },
+
+    // 取消回复
+    cancelReply() {
+      this.replyingToId = null;
+      this.replyContent = "";
+    },
+
+    // 提交回复
+    async submitReply(commentId) {
+      if (!this.replyContent.trim()) {
+        this.$message.warning("请输入回复内容");
+        return;
+      }
+
+      this.replySubmitting = true;
+      try {
+        const response = await this.$apis.addSubComment(
+          commentId,
+          this.replyContent
+        );
+        if (response.data.code === 0) {
+          // 找到对应的评论并添加回复
+          const comment = this.comments.find((c) => c.id === commentId);
+          if (comment) {
+            if (!comment.subComments) {
+              comment.subComments = [];
+            }
+            comment.subComments.push(response.data.comment);
+          }
+          this.replyContent = ""; // 清空输入框
+          this.replyingToId = null; // 关闭回复框
+          this.$message.success("回复发表成功");
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.replySubmitting = false;
+      }
     },
   },
 };
@@ -400,5 +684,146 @@ export default {
 /* 按钮不触发卡片点击 */
 .activity-actions {
   pointer-events: auto;
+}
+
+/* 评论区样式 */
+.comment-section {
+  margin-top: 24px;
+  border-top: 1px solid #ebeef5;
+  padding-top: 20px;
+}
+
+.comment-section h4 {
+  margin: 0 0 16px 0;
+  color: #303133;
+  font-size: 16px;
+}
+
+.comments-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.comment-author {
+  font-weight: 500;
+  color: #303133;
+  font-size: 14px;
+}
+
+.comment-time {
+  color: #909399;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 确保按钮不会影响布局 */
+:deep(.el-button--text) {
+  padding: 0 8px;
+}
+
+/* 调整二级评论的样式 */
+.sub-comment-item .comment-header {
+  margin-bottom: 6px;
+}
+
+/* 确保长用户名不会影响布局 */
+.comment-author {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comment-content {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sub-comments {
+  margin-top: 12px;
+  padding-left: 24px;
+}
+
+.sub-comment-item {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff;
+  border-radius: 6px;
+  border: 1px solid #ebeef5;
+}
+
+/* 自定义滚动条样式 */
+.comments-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-container::-webkit-scrollbar-thumb {
+  background-color: #dcdfe6;
+  border-radius: 3px;
+}
+
+.comments-container::-webkit-scrollbar-track {
+  background-color: #f8f9fa;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.comment-input-section {
+  margin-bottom: 20px;
+}
+
+.comment-input-section .el-button {
+  margin-top: 12px;
+  margin-left: 12px; /* 添加左侧间距 */
+  float: right;
+}
+
+/* 如果有多个按钮，可以使用这个类来控制按钮组的间距 */
+.comment-input-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px; /* 按钮之间的间距 */
+}
+
+/* 清除浮动 */
+.comment-input-section::after {
+  content: "";
+  display: table;
+  clear: both;
 }
 </style>

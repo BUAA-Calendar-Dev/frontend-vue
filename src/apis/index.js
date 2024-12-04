@@ -25,6 +25,12 @@ import {
   updateActivityContent,
   deleteActivity,
   createActivity,
+  getComment,
+  getSubComment,
+  deleteComment,
+  deleteSubComment,
+  addComment,
+  addSubComment,
 } from "@/apis/activity";
 import {
   getClassList,
@@ -308,5 +314,91 @@ export default new (class {
      * post '/api/task/{id}/status'
      */
     this.updateTaskStatus = updateTaskStatus;
+
+    /**
+     * 获取活动的一级评论列表
+     * get '/api/activity/{activityId}/comments'
+     * @param {number} activityId - 活动ID
+     * @returns {Promise<{
+     *   code: number,
+     *   comments: Array<{
+     *     id: number,
+     *     authorId: number,
+     *     author: string,
+     *     time: string,
+     *     content: string
+     *   }>
+     * }>}
+     */
+    this.getComment = getComment;
+
+    /**
+     * 获取评论的二级回复列表
+     * get '/api/comment/{commentId}/replies'
+     * @param {number} commentId - 评论ID
+     * @returns {Promise<{
+     *   code: number,
+     *   comments: Array<{
+     *     id: number,
+     *     authorId: number,
+     *     author: string,
+     *     time: string,
+     *     content: string
+     *   }>
+     * }>}
+     */
+    this.getSubComment = getSubComment;
+
+    /**
+     * 删除一级评论
+     * post '/api/comment/{commentId}/delete'
+     * @param {number} commentId - 评论ID
+     * @returns {Promise<{code: number, message: string}>}
+     */
+    this.deleteComment = deleteComment;
+
+    /**
+     * 删除二级评论
+     * post '/api/reply/{replyId}/delete'
+     * @param {number} replyId - 二级评论ID
+     * @returns {Promise<{code: number, message: string}>}
+     */
+    this.deleteSubComment = deleteSubComment;
+
+    /**
+     * 发表活动评论
+     * post '/api/activity/{activityId}/comment'
+     * @param {number} activityId - 活动ID
+     * @param {string} content - 评论内容
+     * @returns {Promise<{
+     *   code: number,
+     *   comment: {
+     *     id: number,
+     *     authorId: number,
+     *     author: string,
+     *     time: string,
+     *     content: string
+     *   }
+     * }>}
+     */
+    this.addComment = addComment;
+
+    /**
+     * 发表评论回复
+     * post '/api/comment/{commentId}/reply'
+     * @param {number} commentId - 评论ID
+     * @param {string} content - 回复内容
+     * @returns {Promise<{
+     *   code: number,
+     *   comment: {
+     *     id: number,
+     *     authorId: number,
+     *     author: string,
+     *     time: string,
+     *     content: string
+     *   }
+     * }>}
+     */
+    this.addSubComment = addSubComment;
   }
 })();
