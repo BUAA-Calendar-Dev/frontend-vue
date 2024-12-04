@@ -1,7 +1,7 @@
 <template>
   <div class="user-info">
     <el-container>
-      <el-menu :default-active="'1'">
+      <el-menu :default-active="'1'" class="user-menu">
         <el-menu-item index="0" @click="$router.push({ path: '/home' })">
           <DArrowLeft class="siderbar-icon" />
           返回主页
@@ -20,7 +20,7 @@
           <Setting class="siderbar-icon" />
           偏好设置
         </el-menu-item>
-        <el-menu-item index="3" @click="jumpLogout">
+        <el-menu-item index="3" @click="jumpLogout" class="logout-item">
           <Close class="siderbar-icon" />
           退出登录
         </el-menu-item>
@@ -34,28 +34,40 @@
   </div>
 </template>
 
-<style scope>
+<style scoped>
+.user-info {
+  margin: 0 20%;
+  height: 80vh;
+  position: relative;
+}
+
+.user-menu {
+  border-right: 1px solid #e6e6e6;
+  height: 100%;
+  position: relative;
+}
+
 .siderbar-icon {
   width: 1em;
   height: 1em;
   margin-right: 8px;
 }
 
-.el-menu--vertical > .el-menu-item:nth-child(4) {
-  position: absolute;
+.logout-item {
+  position: absolute !important;
   bottom: 0;
-}
-
-.user-info {
-  /* TODO: How to move the item vertically-center */
-  margin: 0 20%;
-  height: 80%;
+  width: 100%;
+  border-top: 1px solid #e6e6e6;
 }
 
 .subview {
   width: 90%;
   margin: 0 auto;
   background-color: aliceblue;
+  height: 100%;
+}
+
+.el-container {
   height: 100%;
 }
 </style>
