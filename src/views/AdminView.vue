@@ -22,7 +22,9 @@
       >
         <template #header>
           <div class="card-header">
-            <h3 class="activity-title">{{ item.content.title }}</h3>
+            <h3 class="activity-title">
+              {{ item.content?.title || "标题缺失" }}
+            </h3>
             <div class="button-group">
               <el-button type="primary" @click="editActivity(item)"
                 >修改</el-button
@@ -40,14 +42,18 @@
               <el-progress
                 :percentage="
                   getTimeProgress(
-                    new Date(item.content.start).getTime(),
-                    new Date(item.content.end).getTime()
+                    item.content?.start
+                      ? new Date(item.content.start).getTime()
+                      : 0,
+                    item.content?.end ? new Date(item.content.end).getTime() : 0
                   )
                 "
                 :status="
                   getTimeStatus(
-                    new Date(item.content.start).getTime(),
-                    new Date(item.content.end).getTime()
+                    item.content?.start
+                      ? new Date(item.content.start).getTime()
+                      : 0,
+                    item.content?.end ? new Date(item.content.end).getTime() : 0
                   )
                 "
                 :stroke-width="15"
@@ -55,20 +61,26 @@
                 <template #default>
                   <span class="progress-label">{{
                     getTimeLabel(
-                      new Date(item.content.start).getTime(),
-                      new Date(item.content.end).getTime()
+                      item.content?.start
+                        ? new Date(item.content.start).getTime()
+                        : 0,
+                      item.content?.end
+                        ? new Date(item.content.end).getTime()
+                        : 0
                     )
                   }}</span>
                 </template>
               </el-progress>
               <div class="time-details">
-                <span>{{ item.content.start }}</span>
-                <span>{{ item.content.end }}</span>
+                <span>{{ item.content?.start || "未设置" }}</span>
+                <span>{{ item.content?.end || "未设置" }}</span>
               </div>
             </div>
           </div>
           <div class="info-item">
-            <span class="info-content">{{ item.content.content }}</span>
+            <span class="info-content">{{
+              item.content?.content || "暂无内容"
+            }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">参与人数：</span>
@@ -530,7 +542,17 @@ export default {
     return {
       navOptions: ["活动管理", "班级管理", "用户管理"],
       navChoosed: "活动管理",
-      activityList: [],
+      activityList: [
+        {
+          content: {
+            title: "活动标题",
+            start: "2024-12-04T10:00:00",
+            end: "2024-12-05T18:00:00",
+            content: "活动内容",
+          },
+          participantCount: 20,
+        },
+      ],
       editDialogVisible: false,
       editForm: {
         id: null,
@@ -1266,6 +1288,11 @@ export default {
           this.$utils.handleHttpException(error);
         }
       }
+    },
+
+    formatDateTime(time) {
+      if (!time) return "未设置";
+      return new Date(time).toLocaleString();
     },
   },
 };
