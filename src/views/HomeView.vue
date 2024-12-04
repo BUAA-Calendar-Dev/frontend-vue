@@ -304,12 +304,14 @@
               >
                 <template #default="scope">
                   <el-checkbox
-                    v-if="scope.row.type === 'task'"
+                    v-if="scope.row.is_task"
                     v-model="scope.row.completed"
                     @change="handleTaskComplete(scope.row)"
                     :disabled="
                       calculateProgress(scope.row.start, scope.row.end) >= 100
                     "
+                    class="task-checkbox"
+                    :class="{ 'is-completed': scope.row.completed }"
                   >
                     完成
                   </el-checkbox>
@@ -493,17 +495,8 @@ export default {
       const allEvents = [
         ...this.events.map((event) => ({
           ...event,
-          type: "activity",
           start: event.start || event.startTime || event.from,
           end: event.end || event.endTime || event.to,
-        })),
-        ...this.specialHours.map((task) => ({
-          ...task,
-          type: "task",
-          title: task.title || task.name || task.class,
-          content: task.content || task.label,
-          start: task.start || task.startTime || task.from,
-          end: task.end || task.endTime || task.to,
         })),
       ];
 
@@ -771,7 +764,7 @@ export default {
     },
 
     getProgressStatus(task) {
-      if (task.type === "task" && task.completed) {
+      if (task.is_task && task.completed) {
         return "success";
       }
       const progress = this.calculateProgress(task.start, task.end);
@@ -1097,5 +1090,20 @@ html {
 
 :deep(.el-progress) {
   margin: 0;
+}
+
+.task-checkbox {
+  transition: all 0.3s ease;
+}
+
+.task-checkbox.is-completed
+  :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  background-color: #67c23a;
+  border-color: #67c23a;
+}
+
+.task-checkbox.is-completed
+  :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+  color: #67c23a;
 }
 </style>
