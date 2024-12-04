@@ -202,7 +202,7 @@
             @cell-click="handleDateClick"
             :style="{ height: '1150px' }"
             :special-hours="specialHours"
-            :events="events"
+            :events="calendarEvents"
           >
             <template #header="{ date }">
               <span>Custom header content</span>
@@ -491,6 +491,48 @@ export default {
     };
   },
   computed: {
+    calendarEvents() {
+      let calendarEvents = this.events.map((event) => {
+        const start = new Date(event.start || event.startTime || event.from);
+        const end = new Date(event.end || event.endTime || event.to);
+
+        // 检查事件是否跨越多天
+        if (
+          start < end &&
+          (start.getDate() !== end.getDate() ||
+            start.getMonth() !== end.getMonth() ||
+            start.getFullYear() !== end.getFullYear())
+        ) {
+          // 如果事件跨越多天，将开始时间设置为结束时间的前一个小时
+          const displayStart = new Date(end);
+          displayStart.setHours(displayStart.getHours() - 3, 0, 0, 0); // 设置为结束时间的前一个小时
+
+          // 格式化时间为 YYYY-MM-DD HH:MM
+          const formatTime = (date) => {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+            const day = date.getDate().toString().padStart(2, "0");
+            const hours = date.getHours().toString().padStart(2, "0");
+            const minutes = date.getMinutes().toString().padStart(2, "0");
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+          };
+
+          return {
+            ...event,
+            start: formatTime(displayStart),
+            end: formatTime(end),
+          };
+        }
+
+        // 如果事件不跨越多天，直接返回原始事件
+        return event;
+      });
+
+      console.log("calendarEvents: ", calendarEvents);
+
+      return calendarEvents;
+    },
+
     sortedEvents() {
       const allEvents = [
         ...this.events.map((event) => ({
@@ -500,7 +542,6 @@ export default {
         })),
       ];
 
-      // 按结束时间排序
       const sortedEvents = allEvents.sort((a, b) => {
         const aEnd = new Date(a.end);
         const bEnd = new Date(b.end);
