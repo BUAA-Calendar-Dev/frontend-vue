@@ -1,5 +1,5 @@
 <template>
-  <el-card class="activity-card" shadow="hover">
+  <el-card class="activity-card" shadow="hover" @click="showDetails">
     <div class="activity-header">
       <h3 class="activity-title">{{ activity.name }}</h3>
       <el-tag :type="activityStatus.type" size="small">
@@ -14,9 +14,9 @@
         placement="top"
         :hide-after="1000"
       >
-        <p>{{ activity.content }}</p>
+        <p ref="contentRef">{{ activity.content }}</p>
       </el-tooltip>
-      <p v-else>{{ activity.content }}</p>
+      <p v-else ref="contentRef">{{ activity.content }}</p>
     </div>
 
     <div class="activity-info">
@@ -51,10 +51,74 @@
       </div>
     </div>
   </el-card>
+
+  <!-- 详情弹窗 -->
+  <el-dialog
+    v-model="dialogVisible"
+    :title="activity.name"
+    width="600px"
+    :close-on-click-modal="false"
+    class="activity-dialog"
+  >
+    <div class="dialog-content">
+      <!-- 活动状态 -->
+      <div class="dialog-header">
+        <el-tag :type="activityStatus.type" size="large">
+          {{ activityStatus.text }}
+        </el-tag>
+        <div class="dialog-actions">
+          <el-button
+            v-if="activityStatus.type !== 'info'"
+            :type="activity.signed_in ? 'danger' : 'success'"
+            size="large"
+            @click="handleParticipation"
+            :loading="loading"
+          >
+            {{ activity.signed_in ? "退出活动" : "参加活动" }}
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 活动详情 -->
+      <div class="detail-section">
+        <h4>活动详情</h4>
+        <div class="detail-content">{{ activity.content }}</div>
+      </div>
+
+      <!-- 活动信息 -->
+      <div class="info-section">
+        <h4>活动信息</h4>
+        <div class="info-grid">
+          <div class="info-item" v-if="activity.place">
+            <div class="info-label">
+              <el-icon><Location /></el-icon>
+              活动地点
+            </div>
+            <div class="info-value">{{ activity.place }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">
+              <el-icon><Timer /></el-icon>
+              开始时间
+            </div>
+            <div class="info-value">{{ formatTime(activity.start) }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">
+              <el-icon><Timer /></el-icon>
+              结束时间
+            </div>
+            <div class="info-value">{{ formatTime(activity.end) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </el-dialog>
 </template>
 
 <script>
 import { Timer, Location } from "@element-plus/icons-vue";
+import { ref, onMounted, nextTick } from "vue";
 
 export default {
   name: "ActivityCard",
@@ -68,10 +132,27 @@ export default {
       required: true,
     },
   },
+  setup() {
+    const contentRef = ref(null);
+    const isContentOverflow = ref(false);
+
+    onMounted(async () => {
+      await nextTick();
+      if (contentRef.value) {
+        isContentOverflow.value =
+          contentRef.value.scrollHeight > contentRef.value.clientHeight;
+      }
+    });
+
+    return {
+      contentRef,
+      isContentOverflow,
+    };
+  },
   data() {
     return {
       loading: false,
-      isContentOverflow: false,
+      dialogVisible: false,
     };
   },
   computed: {
@@ -121,15 +202,16 @@ export default {
         this.loading = false;
       }
     },
-  },
-  mounted() {
-    // 检查内容是否超出
-    this.$nextTick(() => {
-      const content = this.$el.querySelector(".activity-content p");
-      if (content) {
-        this.isContentOverflow = content.scrollHeight > content.clientHeight;
+    showDetails(event) {
+      // 如果点击的是按钮，不显示详情
+      if (
+        event.target.tagName === "BUTTON" ||
+        event.target.closest(".el-button")
+      ) {
+        return;
       }
-    });
+      this.dialogVisible = true;
+    },
   },
 };
 </script>
@@ -239,5 +321,84 @@ export default {
 .activity-actions .el-button.el-button--danger:hover {
   background-color: #f56c6c;
   border-color: #f56c6c;
+}
+
+.activity-dialog :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.dialog-content {
+  padding: 20px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.detail-section,
+.info-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h4,
+.info-section h4 {
+  margin: 0 0 12px 0;
+  color: #303133;
+  font-size: 16px;
+}
+
+.detail-content {
+  color: #606266;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  padding: 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.info-value {
+  color: #303133;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-label .el-icon {
+  font-size: 16px;
+}
+
+/* 让卡片可点击 */
+.activity-card {
+  cursor: pointer;
+}
+
+.activity-card :deep(.el-card__body) {
+  pointer-events: auto;
+}
+
+/* 按钮不触发卡片点击 */
+.activity-actions {
+  pointer-events: auto;
 }
 </style>

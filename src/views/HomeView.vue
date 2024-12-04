@@ -534,24 +534,29 @@ export default {
     },
 
     sortedEvents() {
-      const allEvents = [
-        ...this.events.map((event) => ({
-          ...event,
-          start: event.start || event.startTime || event.from,
-          end: event.end || event.endTime || event.to,
-        })),
-      ];
-
-      const sortedEvents = allEvents.sort((a, b) => {
+      const now = new Date();
+      return [...this.events].sort((a, b) => {
+        const aStart = new Date(a.start);
         const aEnd = new Date(a.end);
+        const bStart = new Date(b.start);
         const bEnd = new Date(b.end);
-        return aEnd - bEnd;
+
+        // 判断是否已结束
+        const aExpired = now > aEnd;
+        const bExpired = now > bEnd;
+
+        // 1. 已结束的放在最后
+        if (aExpired && !bExpired) return 1;
+        if (!aExpired && bExpired) return -1;
+
+        // 2. 如果状态相同（都结束或都未结束），按开始时间倒序排列
+        if (aExpired === bExpired) {
+          // 开始时间晚的排在前面
+          return bStart - aStart;
+        }
+
+        return 0;
       });
-
-      console.log("specialHours raw:", this.specialHours);
-      console.log("sortedEvents:", sortedEvents);
-
-      return sortedEvents;
     },
   },
   mounted() {
