@@ -8,6 +8,8 @@ import {
   setUserInfo,
   updateAvatar,
   changePassword,
+  getUserPreferences,
+  updateUserPreference,
 } from "@/apis/userinfo";
 import {
   getTaskList,
@@ -400,5 +402,15 @@ export default new (class {
      * }>}
      */
     this.addSubComment = addSubComment;
+
+    /**
+     * get '/api/user/preferences'
+     */
+    this.getUserPreferences = getUserPreferences;
+
+    /**
+     * post '/api/user/preferences/update'
+     */
+    this.updateUserPreference = updateUserPreference;
   }
 })();

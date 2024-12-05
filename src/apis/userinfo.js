@@ -38,3 +38,16 @@ export function changePassword(data) {
     "new-password": crypto(data["new-password"]),
   });
 }
+
+// 获取用户偏好设置
+export function getUserPreferences() {
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/user/preference");
+}
+
+// 更新用户偏好设置
+export function updateUserPreference(preferences) {
+  return axios.post(
+    process.env.VUE_APP_ROOT_URL + "/api/user/preference/update",
+    JSON.stringify({ preference: preferences })
+  );
+}

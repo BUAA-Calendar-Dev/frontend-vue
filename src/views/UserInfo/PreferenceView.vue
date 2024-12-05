@@ -1,6 +1,6 @@
 <template>
   <div class="preference-container">
-    <el-card class="preference-card" shadow="hover">
+    <el-card class="preference-card" shadow="hover" v-loading="loading">
       <template #header>
         <div class="card-header">
           <h3>个性化设置</h3>
@@ -58,7 +58,8 @@
           <div class="item-content">
             <el-color-picker
               v-model="preferences.activityColor"
-              show-alpha
+              :show-alpha="false"
+              format="hex"
               @change="savePreference('activityColor')"
             />
           </div>
@@ -69,7 +70,8 @@
           <div class="item-content">
             <el-color-picker
               v-model="preferences.taskColor"
-              show-alpha
+              :show-alpha="false"
+              format="hex"
               @change="savePreference('taskColor')"
             />
           </div>
@@ -188,64 +190,89 @@ export default {
       preferences: {
         activityReminder: "30",
         taskReminder: "360",
-        activityColor: "rgba(64, 158, 255, 0.8)",
-        taskColor: "rgba(245, 108, 108, 0.8)",
+        activityColor: "#409EFF",
+        taskColor: "#F56C6C",
         defaultView: "calendar",
         theme: "light",
       },
+      loading: false,
     };
   },
-  mounted() {
-    this.loadPreferences();
+  async mounted() {
+    await this.loadPreferences();
   },
   methods: {
-    loadPreferences() {
-      // 从 localStorage 加载保存的偏好设置
-      const savedPreferences = localStorage.getItem("userPreferences");
-      if (savedPreferences) {
+    async loadPreferences() {
+      try {
+        this.loading = true;
+        const response = await this.$apis.getUserPreferences();
+        // 合并默认值和后端返回的设置
         this.preferences = {
           ...this.preferences,
-          ...JSON.parse(savedPreferences),
+          ...response.data.preference,
         };
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loading = false;
       }
     },
-    savePreference(key) {
-      // 保存单个偏好设置
-      const savedPreferences = localStorage.getItem("userPreferences");
-      const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
-      preferences[key] = this.preferences[key];
-      localStorage.setItem("userPreferences", JSON.stringify(preferences));
 
-      // 显示保存成功提示
-      this.$message({
-        message: "设置已保存",
-        type: "success",
-        duration: 2000,
-      });
+    async savePreference(key) {
+      try {
+        this.loading = true;
+        // 发送整个preferences对象
+        await this.$apis.updateUserPreference(this.preferences);
 
-      // 触发全局事件，通知其他组件更新
-      this.$emit("preference-updated", {
-        key,
-        value: this.preferences[key],
-      });
+        this.$message({
+          message: "设置已保存",
+          type: "success",
+          duration: 2000,
+        });
+
+        // 触发全局事件，通知其他组件更新
+        this.$emit("preference-updated", {
+          key,
+          value: this.preferences[key],
+        });
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+        // 如果保存失败，重新加载设置
+        await this.loadPreferences();
+      } finally {
+        this.loading = false;
+      }
     },
-    resetPreferences() {
-      // 重置所有设置为默认值
-      this.preferences = {
-        activityReminder: "30",
-        taskReminder: "360",
-        activityColor: "rgba(64, 158, 255, 0.8)",
-        taskColor: "rgba(245, 108, 108, 0.8)",
-        defaultView: "calendar",
-        theme: "light",
-      };
-      localStorage.setItem("userPreferences", JSON.stringify(this.preferences));
 
-      this.$message({
-        message: "已重置所有设置",
-        type: "success",
-        duration: 2000,
-      });
+    async resetPreferences() {
+      try {
+        this.loading = true;
+        // 重置所有设置为默认值
+        const defaultPreferences = {
+          activityReminder: "30",
+          taskReminder: "360",
+          activityColor: "#409EFF",
+          taskColor: "#F56C6C",
+          defaultView: "calendar",
+          theme: "light",
+        };
+
+        // 发送整个默认preferences对象
+        await this.$apis.updateUserPreference(defaultPreferences);
+
+        // 更新本地数据
+        this.preferences = { ...defaultPreferences };
+
+        this.$message({
+          message: "已重置所有设置",
+          type: "success",
+          duration: 2000,
+        });
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.loading = false;
+      }
     },
   },
 };
