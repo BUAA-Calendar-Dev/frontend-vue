@@ -203,6 +203,8 @@
             :style="{ height: '1150px' }"
             :special-hours="specialHours"
             :events="calendarEvents"
+            @event-click="onEventClick"
+            :on-event-click="onEventClick"
           >
             <template #header="{ date }">
               <span>Custom header content</span>
@@ -414,7 +416,7 @@
           placeholder="请输入提醒内容"
         />
       </el-form-item>
-      <el-form-item label="开始时间" required>
+      <el-form-item label="开始时" required>
         <el-date-picker
           v-model="taskForm.start"
           type="datetime"
@@ -437,6 +439,27 @@
       <el-button @click="taskDialogVisible = false">取消</el-button>
       <el-button type="primary" @click="assignTaskToClass">确定</el-button>
     </template>
+  </el-dialog>
+  <!-- 修改活动详情弹窗 -->
+  <el-dialog
+    v-model="eventDetailVisible"
+    :title="selectedEvent?.title || '活动详情'"
+    width="800px"
+  >
+    <div v-if="selectedEvent" class="event-detail">
+      <div class="detail-item">
+        <span class="label">开始时间：</span>
+        <span>{{ formatDateTime(selectedEvent.start) }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">结束时间：</span>
+        <span>{{ formatDateTime(selectedEvent.end) }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">活动内容：</span>
+        <p class="content">{{ selectedEvent.content }}</p>
+      </div>
+    </div>
   </el-dialog>
 </template>
 
@@ -488,6 +511,8 @@ export default {
       viewMode: "calendar", // 添加视图模式控制
       activities: [], // 添加活动列表数据
       loading: false, // 添加加载状态
+      eventDetailVisible: false,
+      selectedEvent: null,
     };
   },
   computed: {
@@ -549,7 +574,7 @@ export default {
         if (aExpired && !bExpired) return 1;
         if (!aExpired && bExpired) return -1;
 
-        // 2. 如果状态相同（都结束或都未结束），按开始时间倒序排列
+        // 2. 如果状态相同（都结束或都未结），按开始时间倒序排列
         if (aExpired === bExpired) {
           // 开始时间晚的排在前面
           return bStart - aStart;
@@ -628,19 +653,19 @@ export default {
     },
     generateGreeting(date) {
       const hour = new Date(date).getHours();
-      let greeting = "祝你有美好的一天！";
+      let greeting = "祝你美好的一天！";
 
       if (hour < 12) {
         greeting = "早上好！新的一天，新的开始！";
       } else if (hour < 18) {
         greeting = "下午好！继续加油！";
       } else {
-        greeting = "晚上好！辛苦了一天，注意休息！";
+        greeting = "晚上好！辛苦了一天，���意休息！";
       }
 
       const day = new Date(date).getDay();
       if (day === 0 || day === 6) {
-        greeting += " 周末愉快！";
+        greeting += " 末愉快！";
       }
 
       return greeting;
@@ -785,8 +810,9 @@ export default {
 
       return Math.round(((now - startDate) / (endDate - startDate)) * 100);
     },
-    formatDateTime(dateTime) {
-      return new Date(dateTime).toLocaleString();
+    formatDateTime(time) {
+      if (!time) return "未设置";
+      return new Date(time).toLocaleString();
     },
 
     getStatusType(item) {
@@ -832,6 +858,11 @@ export default {
         task.completed = !task.completed;
         this.$utils.handleHttpException(error);
       }
+    },
+    onEventClick(event) {
+      console.log("Event clicked:", event);
+      this.selectedEvent = event;
+      this.eventDetailVisible = true;
     },
   },
 };
@@ -1151,5 +1182,32 @@ html {
 .task-checkbox.is-completed
   :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
   color: #67c23a;
+}
+
+.event-detail {
+  padding: 20px;
+}
+
+.detail-item {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.detail-item .label {
+  font-weight: 600;
+  color: #606266;
+  margin-right: 10px;
+  display: inline-block;
+  width: 80px;
+}
+
+.detail-item .content {
+  margin-top: 10px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #303133;
+  font-size: 14px;
 }
 </style>
