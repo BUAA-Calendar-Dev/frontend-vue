@@ -37,7 +37,7 @@
 <style scoped>
 .user-info {
   margin: 0 20%;
-  height: 80vh;
+  height: 100vh;
   position: relative;
 }
 
@@ -45,6 +45,7 @@
   border-right: 1px solid #e6e6e6;
   height: 100%;
   position: relative;
+  background-color: #fff;
 }
 
 .siderbar-icon {
@@ -63,12 +64,19 @@
 .subview {
   width: 90%;
   margin: 0 auto;
-  background-color: aliceblue;
   height: 100%;
+  padding: 20px 0;
 }
 
 .el-container {
   height: 100%;
+  background-color: #f5f7fa;
+}
+
+.el-main {
+  padding: 0;
+  height: 100%;
+  overflow-y: auto;
 }
 </style>
 

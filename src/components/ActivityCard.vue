@@ -8,15 +8,7 @@
     </div>
 
     <div class="activity-content">
-      <el-tooltip
-        v-if="isContentOverflow"
-        :content="activity.content"
-        placement="top"
-        :hide-after="1000"
-      >
-        <p ref="contentRef">{{ activity.content }}</p>
-      </el-tooltip>
-      <p v-else ref="contentRef">{{ activity.content }}</p>
+      <p ref="contentRef">{{ activity.content }}</p>
     </div>
 
     <div class="activity-info">
@@ -551,20 +543,17 @@ export default {
   line-height: 1.6;
   margin: 12px 0 16px;
   min-height: 40px;
+  flex: 1;
 }
 
 .activity-content p {
   margin: 0;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3; /* 显示3行 */
+  -webkit-line-clamp: 3;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* 当鼠标悬停在内容上时显示指针 */
-.activity-content p:hover {
-  cursor: pointer;
+  cursor: default;
 }
 
 .activity-info {
