@@ -18,6 +18,7 @@ import {
   assignTaskToClass,
   assignTaskToSchool,
   updateTaskStatus,
+  updateTask,
 } from "@/apis/tasks";
 import { getTagList, modifyTag, deleteTag, newTag } from "@/apis/tags";
 import {
@@ -412,5 +413,10 @@ export default new (class {
      * post '/api/user/preferences/update'
      */
     this.updateUserPreference = updateUserPreference;
+
+    /**
+     * post '/api/task/{id}/modify'
+     */
+    this.updateTask = updateTask;
   }
 })();

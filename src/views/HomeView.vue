@@ -24,37 +24,10 @@
               :key="task.id"
               justify="center"
               class="task-item"
+              @click="showTaskDetail(task)"
             >
               <el-col :span="20">
-                <el-card shadow="hover" class="task-card">
-                  <template #header>
-                    <div class="task-header">
-                      <span>{{ task.name }}</span>
-                      <el-tag size="small" class="deadline-tag">
-                        {{ new Date(task.end).toLocaleDateString() }}
-                      </el-tag>
-                    </div>
-                  </template>
-                  <div class="task-content">
-                    <p>{{ task.content }}</p>
-                    <el-progress
-                      :percentage="calculateProgress(task.start, task.end)"
-                      :status="
-                        calculateProgress(task.start, task.end) >= 100
-                          ? 'success'
-                          : ''
-                      "
-                    />
-                    <div class="task-time">
-                      <span
-                        >开始: {{ new Date(task.start).toLocaleString() }}</span
-                      >
-                      <span
-                        >结束: {{ new Date(task.end).toLocaleString() }}</span
-                      >
-                    </div>
-                  </div>
-                </el-card>
+                <task-card :task="task" :tagList="tagList" />
               </el-col>
             </el-row>
           </el-scrollbar>
@@ -178,7 +151,7 @@
               <!-- 右侧头像 -->
               <!-- 右侧头像和用户名 -->
               <div style="display: flex; align-items: center">
-                <!-- 用户头像 -->
+                <!-- 用像 -->
                 <el-avatar
                   size="medium"
                   :src="userAvatar"
@@ -271,13 +244,7 @@
 
               <el-table-column label="内容" prop="content" min-width="200">
                 <template #default="scope">
-                  <el-tooltip
-                    :content="scope.row.content"
-                    placement="top"
-                    :hide-after="500"
-                  >
-                    <div class="content-cell">{{ scope.row.content }}</div>
-                  </el-tooltip>
+                  <div class="content-cell">{{ scope.row.content }}</div>
                 </template>
               </el-table-column>
 
@@ -288,7 +255,7 @@
               </el-table-column>
 
               <el-table-column
-                label="结束时间"
+                label="结时间"
                 prop="end"
                 min-width="160"
                 sortable
@@ -391,7 +358,7 @@
   <!-- Drawer: message list (student) -->
   <el-drawer v-model="message_drawer" :direction="'rtl'">
     <template #header>
-      <h4>收到的消息</h4>
+      <h4>到的消息</h4>
     </template>
     <MessageList :messages="messageList" :update="updateMessage" />
   </el-drawer>
@@ -454,10 +421,33 @@
   <!-- 修改活动详情弹窗 -->
   <el-dialog
     v-model="eventDetailVisible"
-    :title="selectedEvent?.title || '活动详情'"
-    width="800px"
+    :title="selectedEvent?.title"
+    width="600px"
   >
     <div v-if="selectedEvent" class="event-detail">
+      <!-- 标题和标签部分 -->
+      <div class="detail-header">
+        <h3 class="detail-title">{{ selectedEvent.title }}</h3>
+        <div
+          class="event-tags"
+          v-if="selectedEvent.tags && selectedEvent.tags.length > 0"
+        >
+          <el-tag
+            v-for="tagId in selectedEvent.tags"
+            :key="tagId"
+            size="small"
+            :style="{
+              backgroundColor: 'transparent',
+              color: getTagColor(tagId),
+              borderColor: getTagColor(tagId),
+            }"
+          >
+            {{ getTagName(tagId) }}
+          </el-tag>
+        </div>
+      </div>
+
+      <!-- 其他详情内容 -->
       <div class="detail-item">
         <span class="label">开始时间：</span>
         <span>{{ formatDateTime(selectedEvent.start) }}</span>
@@ -477,7 +467,7 @@
   </el-dialog>
   <!-- 添加创建任务的弹窗 -->
   <el-dialog
-    title="创建新任务"
+    title="创建新任"
     v-model="personalTaskDialogVisible"
     width="500px"
     @close="resetTaskDialogFields"
@@ -517,8 +507,117 @@
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="personalTaskDialogVisible = false">取消</el-button>
+      <el-button @click="personalTaskDialogVisible = false">取</el-button>
       <el-button type="primary" @click="createTask">确定</el-button>
+    </template>
+  </el-dialog>
+  <!-- 修改任务详情弹窗 -->
+  <el-dialog
+    v-model="taskDetailVisible"
+    title="任务详情"
+    width="500px"
+    :close-on-click-modal="false"
+  >
+    <el-form v-if="selectedTask" :model="selectedTask" label-width="100px">
+      <el-form-item label="任名称" required>
+        <el-input v-model="selectedTask.name" placeholder="请输入任务名称" />
+      </el-form-item>
+
+      <el-form-item label="开始时间" required>
+        <el-date-picker
+          v-model="selectedTask.start"
+          type="datetime"
+          placeholder="选择开始时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+
+      <el-form-item label="结束时间" required>
+        <el-date-picker
+          v-model="selectedTask.end"
+          type="datetime"
+          placeholder="选择结束时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+
+      <el-form-item label="任务内容" required>
+        <el-input
+          v-model="selectedTask.content"
+          type="textarea"
+          rows="4"
+          placeholder="输入任务内容"
+        />
+      </el-form-item>
+
+      <el-form-item label="完成状态">
+        <el-checkbox
+          v-model="selectedTask.completed"
+          :disabled="
+            calculateProgress(selectedTask.start, selectedTask.end) >= 100
+          "
+        >
+          已完成
+        </el-checkbox>
+      </el-form-item>
+
+      <!-- 添加标签选择 -->
+      <el-form-item label="任务标签">
+        <el-select
+          v-model="selectedTask.tags"
+          multiple
+          filterable
+          placeholder="请选择标签"
+          @visible-change="loadTags"
+          :loading="loadingTags"
+          class="tag-select"
+        >
+          <el-option
+            v-for="tag in tagList"
+            :key="tag.id"
+            :label="tag.title"
+            :value="tag.id"
+          >
+            <div class="tag-option">
+              <div
+                class="tag-color"
+                :style="{ backgroundColor: tag.color || '#409EFF' }"
+              ></div>
+              <span>{{ tag.title }}</span>
+            </div>
+          </el-option>
+        </el-select>
+        <!-- 修改已选标签的显示部分 -->
+        <div class="selected-tags">
+          <el-tag
+            v-for="tagId in selectedTask.tags"
+            :key="tagId"
+            :style="{ backgroundColor: getTagColor(tagId) + '20' }"
+            class="tag-item"
+            closable
+            @close="removeTag(tagId)"
+          >
+            <div class="tag-item-content">
+              <div
+                class="tag-color-dot"
+                :style="{ backgroundColor: getTagColor(tagId) }"
+              ></div>
+              <span>{{ getTagName(tagId) }}</span>
+            </div>
+          </el-tag>
+        </div>
+      </el-form-item>
+    </el-form>
+
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="taskDetailVisible = false">取消</el-button>
+        <el-button type="primary" @click="updateTask" :loading="updating">
+          保存修改
+        </el-button>
+      </span>
     </template>
   </el-dialog>
 </template>
@@ -533,11 +632,13 @@ import "vue-cal/dist/vuecal.css"; // 导入样式
 import MessageList from "@/components/MessageList.vue";
 import TagDialogInner from "@/components/TagDialogInner.vue";
 import { ElMessageBox } from "element-plus";
+import TaskCard from "@/components/TaskCard.vue";
 
 export default {
   name: "HomeView",
   component: {
     MessageList,
+    TaskCard,
   },
   data() {
     return {
@@ -580,6 +681,11 @@ export default {
       loading: false, // 添加加载状态
       eventDetailVisible: false,
       selectedEvent: null,
+      taskDetailVisible: false,
+      selectedTask: null,
+      updating: false,
+      tagList: [], // 存储标签列表
+      loadingTags: false,
     };
   },
   computed: {
@@ -641,7 +747,7 @@ export default {
         if (aExpired && !bExpired) return 1;
         if (!aExpired && bExpired) return -1;
 
-        // 2. 如果状态相同（都结束或都未结），按开始时间倒序排列
+        // 2. 如状相同（都结束或未结），按开始时间倒序排列
         if (aExpired === bExpired) {
           // 开始时间晚的排在前面
           return bStart - aStart;
@@ -651,16 +757,18 @@ export default {
       });
     },
   },
-  mounted() {
+  async mounted() {
     if (!this.$var.auth.isValid()) {
       ElMessageBox.alert("登录失效！", { type: "warning" });
       this.$router.push({ path: "/" });
+    } else {
+      // 加载标签列表
+      await this.loadTags();
+      // 加载其他数据
+      await this.updateEvents();
+      await this.updateMessage();
+      this.username = this.$var.auth.username;
     }
-    if (this.$var.auth.role == "student") {
-      this.updateMessage();
-    }
-    this.updateUser();
-    this.updateEvents(); // 只需要调用一次，会同时获取活和任务数据
   },
   watch: {
     // 监听视图模式变化
@@ -737,7 +845,7 @@ export default {
 
       return greeting;
     },
-    // 路由跳转方法,一些信息应该可以不跳转，直接就展示出来
+    // 路由跳转方法,一些息应该可以不跳转，直接就展示出来
     goToProfile() {
       this.$router.push({ path: "/user" });
     },
@@ -782,16 +890,18 @@ export default {
       try {
         this.loading = true;
         const response = await this.$apis.getEvent();
-        // 确保数据存在且是数组
-        this.events = response.data.events || [];
+        this.events = (response.data.events || []).map((event) => ({
+          ...event,
+          tags: event.tags || [], // 确保有 tags 属性
+          title: event.name || event.title, // 统一标题字段
+          content: event.content || "", // 确保有 content 属性
+        }));
         this.specialHours = response.data.specialHours || [];
-        console.log("Updated events:", this.events);
-        console.log("Updated specialHours:", this.specialHours);
+
+        // 打印检查数据
+        console.log("Updated events with tags:", this.events);
       } catch (error) {
         this.$utils.handleHttpException(error);
-        // 出错时清空数据
-        this.events = [];
-        this.specialHours = [];
       } finally {
         this.loading = false;
       }
@@ -817,13 +927,13 @@ export default {
       }
       this.message_drawer = true;
     },
-    // 获取班级列表
+    // 获取班级列
     getClassList() {
       this.$apis.getClassList().then((response) => {
         this.classList = response.data.class;
       });
     },
-    // 创建任务
+    // 创建务
     assignTaskToClass() {
       if (!this.taskForm.classId) {
         this.$message.error("请选择班级");
@@ -926,9 +1036,16 @@ export default {
         this.$utils.handleHttpException(error);
       }
     },
-    onEventClick(event) {
-      console.log("Event clicked:", event);
-      this.selectedEvent = event;
+    async onEventClick(event) {
+      console.log("Clicked event:", event); // 添加日志
+      await this.loadTags(); // 确保标签列表已加载
+      // 确保选中的事件包含所有必要的属性
+      this.selectedEvent = {
+        ...event,
+        tags: event.tags || [], // 确保有 tags 属性
+        title: event.name || event.title, // 统一标题字段
+        content: event.content || "", // 确保有 content 属性
+      };
       this.eventDetailVisible = true;
     },
     // 添加 markdown 渲染方法
@@ -966,7 +1083,7 @@ export default {
         new Date(this.personalTaskForm.start) >=
         new Date(this.personalTaskForm.end)
       ) {
-        this.$message.error("开始时间必须早于结束时间");
+        this.$message.error("开始时间须早于结束时间");
         return;
       }
 
@@ -986,6 +1103,106 @@ export default {
         .catch((error) => {
           this.$message.error(`创建失败：${error.message}`);
         });
+    },
+    showTaskDetail(task) {
+      this.selectedTask = {
+        ...task,
+        tags: task.tags || [],
+      };
+      this.taskDetailVisible = true;
+      this.loadTags(); // 加载标签列表
+    },
+    async updateTask() {
+      // 表单验证
+      if (!this.selectedTask.name.trim()) {
+        this.$message.error("请输入任务名称");
+        return;
+      }
+      if (!this.selectedTask.start) {
+        this.$message.error("选择开始时间");
+        return;
+      }
+      if (!this.selectedTask.end) {
+        this.$message.error("请选择结束时间");
+        return;
+      }
+      if (!this.selectedTask.content.trim()) {
+        this.$message.error("请输入任务内容");
+        return;
+      }
+
+      // 验证时间
+      if (
+        new Date(this.selectedTask.start) >= new Date(this.selectedTask.end)
+      ) {
+        this.$message.error("开始时间必须早于结束时间");
+        return;
+      }
+
+      // 格式化时间为 YYYY-MM-DD HH:mm
+      const formatDateTime = (dateStr) => {
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      };
+
+      this.updating = true;
+      try {
+        await this.$apis.updateTask(this.selectedTask.id, {
+          title: this.selectedTask.name,
+          content: this.selectedTask.content,
+          start: formatDateTime(this.selectedTask.start),
+          end: formatDateTime(this.selectedTask.end),
+          percentage: this.selectedTask.completed ? 100 : 0,
+          tags: this.selectedTask.tags, // 添加标签数据
+        });
+
+        this.$message.success("任务更新成功");
+        this.taskDetailVisible = false;
+        await this.updateEvents(); // 刷新任务列表
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      } finally {
+        this.updating = false;
+      }
+    },
+    // 加载标签列表
+    async loadTags() {
+      if (this.tagList.length === 0) {
+        // 只在标签列表为空时加载
+        this.loadingTags = true;
+        try {
+          const response = await this.$apis.getTagList();
+          this.tagList = response.data.tags.map((tag) => ({
+            ...tag,
+            color: tag.color || "#409EFF",
+          }));
+        } catch (error) {
+          this.$utils.handleHttpException(error);
+        } finally {
+          this.loadingTags = false;
+        }
+      }
+    },
+    // 获取标签颜色
+    getTagColor(tagId) {
+      const tag = this.tagList.find((t) => t.id === tagId);
+      return tag ? tag.color : "#409EFF";
+    },
+    // 获取标签名称
+    getTagName(tagId) {
+      const tag = this.tagList.find((t) => t.id === tagId);
+      return tag ? tag.title : "";
+    },
+    // 移除标签
+    removeTag(tagId) {
+      this.selectedTask.tags = this.selectedTask.tags.filter(
+        (id) => id !== tagId
+      );
     },
   },
 };
@@ -1268,6 +1485,8 @@ html {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
+  padding: 4px 0;
 }
 
 :deep(.el-table) {
@@ -1385,9 +1604,6 @@ html {
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .create-task-btn {
@@ -1397,9 +1613,6 @@ html {
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .create-schedule-btn:hover,
@@ -1416,5 +1629,179 @@ html {
 
 :deep(.el-icon) {
   font-size: 16px;
+}
+
+.task-item {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.task-content-text {
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+.task-content {
+  font-size: 14px;
+  padding: 16px 0;
+  color: #606266;
+}
+
+/* 添加标签选择器的样式 */
+:deep(.el-select) {
+  width: 100%;
+}
+
+:deep(.el-select__tags) {
+  flex-wrap: wrap;
+}
+
+.tag-select {
+  margin-bottom: 8px;
+}
+
+.tag-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-item {
+  border: none;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+}
+
+.tag-item-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+:deep(.el-tag .el-tag__close) {
+  color: #606266;
+}
+
+:deep(.el-tag .el-tag__close:hover) {
+  color: #303133;
+  background-color: transparent;
+}
+
+.task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  gap: 4px;
+}
+
+.task-card .tag-item-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.task-card .tag-color-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* 确保标签在卡片中正确显示 */
+.task-card :deep(.el-tag) {
+  margin: 0;
+  padding: 0 6px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.event-detail .tag-item-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.event-detail .tag-color-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.event-detail :deep(.el-tag) {
+  height: 22px;
+  line-height: 22px;
+  padding: 0 8px;
+}
+
+.detail-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.detail-title {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: #303133;
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.event-detail :deep(.el-tag) {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* 移除不需要的样式 */
+.event-detail .tag-item-content,
+.event-detail .tag-color-dot {
+  display: none;
 }
 </style>

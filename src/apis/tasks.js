@@ -35,3 +35,10 @@ export function updateTaskStatus(taskId, data) {
     data
   );
 }
+
+export function updateTask(taskId, data) {
+  return axios.post(
+    `${process.env.VUE_APP_ROOT_URL}/api/task/${taskId}/modify`,
+    data
+  );
+}
