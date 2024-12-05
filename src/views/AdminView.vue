@@ -32,6 +32,9 @@
               <el-button type="danger" @click="deleteActivity(item)"
                 >删除</el-button
               >
+              <el-button type="success" @click="toggleContent(index)">
+                {{ item.contentVisible ? "隐藏内容" : "显示内容" }}
+              </el-button>
             </div>
           </div>
         </template>
@@ -78,16 +81,17 @@
             </div>
           </div>
           <div class="info-item">
-            <span class="info-content">{{
-              item.content?.content || "暂无内容"
-            }}</span>
-          </div>
-          <div class="info-item">
             <span class="info-label">参与人数：</span>
             <span class="info-content"
               >{{ item.participantCount || 0 }} 人</span
             >
           </div>
+          <div
+            class="markdown-body"
+            style="text-align: left"
+            v-show="item.contentVisible"
+            v-html="$md.render(item.content?.content)"
+          ></div>
         </div>
       </el-card>
     </div>
@@ -135,10 +139,19 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="handleCreateSubmit"
-            >发布活动</el-button
-          >
-          <el-button @click="resetNewActivityForm">重置</el-button>
+          <div class="form-buttons">
+            <div class="left-buttons">
+              <el-button type="text" @click="previewContent"
+                >Markdown 预览</el-button
+              >
+            </div>
+            <div class="right-buttons">
+              <el-button type="primary" @click="handleCreateSubmit"
+                >发布活动</el-button
+              >
+              <el-button @click="resetNewActivityForm">重置</el-button>
+            </div>
+          </div>
         </el-form-item>
       </el-form>
     </div>
@@ -215,7 +228,7 @@
               <span class="info-content">{{ classItem.count || 0 }} 人</span>
             </div>
             <div class="info-item">
-              <span class="info-label">任课教师：</span>
+              <span class="info-label">课教师：</span>
               <span class="info-content">
                 <el-tag
                   v-for="(teacher, idx) in classItem.teacher"
@@ -256,7 +269,7 @@
       >
         <el-table-column prop="id" label="用户ID" width="80" />
         <el-table-column prop="username" label="用户名" width="120" />
-        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="name" label="姓" width="100" />
         <el-table-column prop="gender" label="性别" width="80">
           <template #default="scope">
             {{ scope.row.gender === "male" ? "男" : "女" }}
@@ -350,6 +363,11 @@
     </el-dialog>
   </div>
   <el-dialog v-model="editDialogVisible" title="修改活动" width="500px">
+    <template #header>
+      <div class="dialog-header">
+        <h4 class="dialog-title">修改活动</h4>
+      </div>
+    </template>
     <el-form :model="editForm" label-width="100px">
       <el-form-item label="活动标题" required>
         <el-input v-model="editForm.title" placeholder="请输入活动标题" />
@@ -391,10 +409,17 @@
     </el-form>
 
     <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleEditSubmit">确定</el-button>
-      </span>
+      <div class="form-buttons">
+        <div class="left-buttons">
+          <el-button type="text" @click="previewEditContent"
+            >Markdown 预览</el-button
+          >
+        </div>
+        <div class="right-buttons">
+          <el-button type="primary" @click="handleEditSubmit">确定</el-button>
+          <el-button @click="editDialogVisible = false">取消</el-button>
+        </div>
+      </div>
     </template>
   </el-dialog>
 
@@ -503,6 +528,47 @@
       </div>
     </div>
   </el-dialog>
+
+  <!-- 预览弹窗 -->
+  <el-dialog
+    v-model="previewDialogVisible"
+    title="内容预览"
+    width="60%"
+    :close-on-click-modal="false"
+  >
+    <div class="preview-content">
+      <div
+        class="markdown-body"
+        v-html="$md.render(newActivityForm.content || '')"
+      ></div>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="previewDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+  <!-- 编辑预览弹窗 -->
+  <el-dialog
+    v-model="editPreviewDialogVisible"
+    title="内容预览"
+    width="60%"
+    :close-on-click-modal="false"
+    append-to-body
+  >
+    <div class="preview-content">
+      <div
+        class="markdown-body"
+        v-html="$md.render(editForm.content || '')"
+      ></div>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="editPreviewDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script>
@@ -542,17 +608,7 @@ export default {
     return {
       navOptions: ["活动管理", "班级管理", "用户管理"],
       navChoosed: "活动管理",
-      activityList: [
-        {
-          content: {
-            title: "活动标题",
-            start: "2024-12-04T10:00:00",
-            end: "2024-12-05T18:00:00",
-            content: "活动内容",
-          },
-          participantCount: 20,
-        },
-      ],
+      activityList: [],
       editDialogVisible: false,
       editForm: {
         id: null,
@@ -608,7 +664,7 @@ export default {
       },
       createClassRules: {
         name: [
-          { required: true, message: "请输入班级名称", trigger: "blur" },
+          { required: true, message: "请输入班级称", trigger: "blur" },
           {
             min: 3,
             max: 20,
@@ -642,6 +698,8 @@ export default {
         password: [{ validator: validatePass, trigger: "blur" }],
         confirmPassword: [{ validator: validatePass2, trigger: "blur" }],
       },
+      previewDialogVisible: false, // 预览弹窗的显示状态
+      editPreviewDialogVisible: false, // 编辑预览弹窗的显示状态
     };
   },
   computed: {
@@ -1255,7 +1313,7 @@ export default {
         );
 
         if (response.data.code === 0) {
-          this.$message.success("密码重置成功");
+          this.$message.success("码重置成功");
           this.resetPasswordDialogVisible = false;
         } else {
           this.$message.error(response.data.message || "密码重置失败");
@@ -1293,6 +1351,48 @@ export default {
     formatDateTime(time) {
       if (!time) return "未设置";
       return new Date(time).toLocaleString();
+    },
+
+    // 切换内容显示状态
+    toggleContent(index) {
+      if (!this.activityList[index].contentVisible) {
+        this.activityList[index].contentVisible = true;
+      } else {
+        this.activityList[index].contentVisible = false;
+      }
+    },
+
+    // 修改获取活动列表的方法，为每个活动添加 contentVisible 属性
+    async fetchActivityList() {
+      try {
+        const response = await this.$apis.getActivityList();
+        if (response.data.code === 0) {
+          this.activityList = response.data.activities.map((activity) => ({
+            ...activity,
+            contentVisible: false, // 默认隐藏内容
+          }));
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    // 预览内容
+    previewContent() {
+      if (!this.newActivityForm.content) {
+        this.$message.warning("请先输入活动内容");
+        return;
+      }
+      this.previewDialogVisible = true;
+    },
+
+    // 预览��辑内容
+    previewEditContent() {
+      if (!this.editForm.content) {
+        this.$message.warning("请先输入活动内容");
+        return;
+      }
+      this.editPreviewDialogVisible = true;
     },
   },
 };
@@ -1590,5 +1690,51 @@ export default {
 
 :deep(.el-icon) {
   vertical-align: middle;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0 20px;
+  text-align: left;
+}
+
+/* 确保预览内容中的图片不会超出容器 */
+:deep(.markdown-body img) {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 调整预览弹窗中的代码块样式 */
+:deep(.markdown-body pre) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.right-buttons {
+  margin-left: auto;
+}
+
+/* 确保嵌套弹窗正确显示 */
+:deep(.el-dialog__wrapper) {
+  z-index: 2000 !important;
 }
 </style>
