@@ -972,7 +972,7 @@ export default {
 
       this.$apis
         .createTask({
-          name: this.personalTaskForm.name,
+          title: this.personalTaskForm.name,
           start: this.personalTaskForm.start,
           end: this.personalTaskForm.end,
           content: this.personalTaskForm.content,
