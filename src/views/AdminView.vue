@@ -23,7 +23,7 @@
         <template #header>
           <div class="card-header">
             <h3 class="activity-title">
-              {{ item.content?.title || "标题缺失" }}
+              {{ item.content?.title || item.name || "标题缺失" }}
             </h3>
             <div class="button-group">
               <el-button type="primary" @click="editActivity(item)"
@@ -45,18 +45,14 @@
               <el-progress
                 :percentage="
                   getTimeProgress(
-                    item.content?.start
-                      ? new Date(item.content.start).getTime()
-                      : 0,
-                    item.content?.end ? new Date(item.content.end).getTime() : 0
+                    item.content?.start ? new Date(item.start).getTime() : 0,
+                    item.content?.end ? new Date(item.end).getTime() : 0
                   )
                 "
                 :status="
                   getTimeStatus(
-                    item.content?.start
-                      ? new Date(item.content.start).getTime()
-                      : 0,
-                    item.content?.end ? new Date(item.content.end).getTime() : 0
+                    item.content?.start ? new Date(item.start).getTime() : 0,
+                    item.content?.end ? new Date(item.end).getTime() : 0
                   )
                 "
                 :stroke-width="15"
@@ -64,19 +60,15 @@
                 <template #default>
                   <span class="progress-label">{{
                     getTimeLabel(
-                      item.content?.start
-                        ? new Date(item.content.start).getTime()
-                        : 0,
-                      item.content?.end
-                        ? new Date(item.content.end).getTime()
-                        : 0
+                      item.content?.start ? new Date(item.start).getTime() : 0,
+                      item.content?.end ? new Date(item.end).getTime() : 0
                     )
                   }}</span>
                 </template>
               </el-progress>
               <div class="time-details">
-                <span>{{ item.content?.start || "未设置" }}</span>
-                <span>{{ item.content?.end || "未设置" }}</span>
+                <span>{{ item.start || "未设置" }}</span>
+                <span>{{ item.end || "未设置" }}</span>
               </div>
             </div>
           </div>
@@ -90,7 +82,7 @@
             class="markdown-body"
             style="text-align: left"
             v-show="item.contentVisible"
-            v-html="$md.render(item.content?.content)"
+            v-html="renderMarkdown(item.content?.content || '')"
           ></div>
         </div>
       </el-card>
@@ -539,7 +531,7 @@
     <div class="preview-content">
       <div
         class="markdown-body"
-        v-html="$md.render(newActivityForm.content || '')"
+        v-html="renderMarkdown(String(newActivityForm.content || ''))"
       ></div>
     </div>
     <template #footer>
@@ -560,7 +552,7 @@
     <div class="preview-content">
       <div
         class="markdown-body"
-        v-html="$md.render(editForm.content || '')"
+        v-html="renderMarkdown(String(editForm.content || ''))"
       ></div>
     </div>
     <template #footer>
@@ -581,6 +573,12 @@ export default {
     Search,
     SwitchButton,
   },
+  emits: [
+    "update:modelValue", // 用于 v-model
+    "change", // 用于选择器和表单变化
+    "selection-change", // 用于表格选择
+    "close", // 用于对话框关闭
+  ],
   data() {
     // 密码验证规则
     const validatePass = (rule, value, callback) => {
@@ -680,7 +678,7 @@ export default {
       teacherOptions: [],
       creatingClass: false,
       classStudents: [], // 当前班级的学生
-      classTeachers: [], // 当前班级的教师
+      classTeachers: [], // 当前班级的教���
       allStudents: [], // 所有可选的学生
       allTeachers: [], // 所有可选的教师
       loadingClassMembers: false,
@@ -786,15 +784,12 @@ export default {
     if (!this.$var.auth.isValid()) {
       ElMessageBox.alert("登录失效！", { type: "warning" });
       this.$router.push({ path: "/" });
-      return;
+    } else {
+      // 初始化数据
+      this.fetchActivityList();
+      this.updateClassList();
+      this.loadUserList();
     }
-    if (this.$var.auth.role !== "admin") {
-      ElMessageBox.alert("非法访问！", { type: "warning" });
-      this.$router.push({ path: "/" });
-      return;
-    }
-    this.updateList();
-    this.updateClassList();
   },
   methods: {
     updateList() {
@@ -820,10 +815,10 @@ export default {
     editActivity(activity) {
       this.editForm = {
         id: activity.id,
-        title: activity.content.title,
-        content: activity.content.content,
-        start: activity.content.start,
-        end: activity.content.end,
+        title: activity.name || activity.content?.title || "",
+        content: activity.content || "",
+        start: activity.start || activity.content?.start || "",
+        end: activity.end || activity.content?.end || "",
       };
       this.editDialogVisible = true;
     },
@@ -890,7 +885,7 @@ export default {
     handleEditSubmit() {
       // 验证表单
       if (!this.editForm.title.trim()) {
-        this.$message.error("请输入活标题");
+        this.$message.error("请输入��动标题");
         return;
       }
       if (!this.editForm.start) {
@@ -901,7 +896,7 @@ export default {
         this.$message.error("请选择结束时间");
         return;
       }
-      if (!this.editForm.content.trim()) {
+      if (!this.editForm.content?.trim()) {
         this.$message.error("请输入活动内容");
         return;
       }
@@ -941,7 +936,7 @@ export default {
         this.$message.error("请选择结束时间");
         return;
       }
-      if (!this.newActivityForm.content.trim()) {
+      if (!this.newActivityForm.content?.trim()) {
         this.$message.error("请输入活动内容");
         return;
       }
@@ -1206,7 +1201,7 @@ export default {
           this.resetCreateForm();
           this.updateClassList();
         } else {
-          this.$message.error(response.data.message || "创建失败");
+          this.$message.error(response.data.message || "��建失败");
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
@@ -1369,8 +1364,16 @@ export default {
         if (response.data.code === 0) {
           this.activityList = response.data.activities.map((activity) => ({
             ...activity,
-            contentVisible: false, // 默认隐藏内容
+            contentVisible: false,
           }));
+
+          // 获取每个活动的详细内容
+          for (let activity of this.activityList) {
+            const contentResponse = await this.$apis.getActivityContent(
+              activity.id
+            );
+            activity.content = contentResponse.data.content;
+          }
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
@@ -1386,13 +1389,23 @@ export default {
       this.previewDialogVisible = true;
     },
 
-    // 预览��辑内容
+    // 预览辑内容
     previewEditContent() {
       if (!this.editForm.content) {
         this.$message.warning("请先输入活动内容");
         return;
       }
       this.editPreviewDialogVisible = true;
+    },
+
+    // 添加安全的markdown渲染方法
+    renderMarkdown(content) {
+      try {
+        return this.$md.render(String(content || ""));
+      } catch (error) {
+        console.error("Markdown rendering error:", error);
+        return "";
+      }
     },
   },
 };
