@@ -457,7 +457,10 @@
       </div>
       <div class="detail-item">
         <span class="label">活动内容：</span>
-        <p class="content">{{ selectedEvent.content }}</p>
+        <div
+          class="markdown-body"
+          v-html="renderMarkdown(String(selectedEvent.content || ''))"
+        ></div>
       </div>
     </div>
   </el-dialog>
@@ -506,7 +509,7 @@ export default {
       },
       classList: [], // 班级列表
       taskList: [], // 存储任务列表
-      showTaskList: false, // 控制任务列表的显示
+      showTaskList: false, // 控任务列表的显示
       greetingMessage: "", // 添加问候信息的状态
       viewMode: "calendar", // 添加视图模式控制
       activities: [], // 添加活动列表数据
@@ -658,9 +661,9 @@ export default {
       if (hour < 12) {
         greeting = "早上好！新的一天，新的开始！";
       } else if (hour < 18) {
-        greeting = "下午好！继续加油！";
+        greeting = "下���好！继续加油！";
       } else {
-        greeting = "晚上好！辛苦了一天，���意休息！";
+        greeting = "晚上好！辛苦了一天，意休息！";
       }
 
       const day = new Date(date).getDay();
@@ -863,6 +866,15 @@ export default {
       console.log("Event clicked:", event);
       this.selectedEvent = event;
       this.eventDetailVisible = true;
+    },
+    // 添加 markdown 渲染方法
+    renderMarkdown(content) {
+      try {
+        return this.$md.render(String(content || ""));
+      } catch (error) {
+        console.error("Markdown rendering error:", error);
+        return "";
+      }
     },
   },
 };
@@ -1209,5 +1221,43 @@ html {
   line-height: 1.6;
   color: #303133;
   font-size: 14px;
+}
+
+/* 修改 markdown 内容样式 */
+.markdown-body {
+  padding: 16px;
+  background: #fff;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+:deep(.markdown-body) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+:deep(.markdown-body img) {
+  max-width: 100%;
+  height: auto;
+}
+
+:deep(.markdown-body pre) {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+}
+
+:deep(.markdown-body code) {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 6px;
 }
 </style>
