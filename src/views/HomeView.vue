@@ -154,15 +154,26 @@
                     />
                   </el-tooltip>
                 </el-badge>
-                <el-button
-                  @click="customEventCreation"
-                  class="create-schedule-btn"
-                  type="primary"
-                  round
-                >
-                  <i class="el-icon-plus" style="margin-right: 4px" />
-                  创建新日程
-                </el-button>
+                <div class="action-buttons">
+                  <el-button
+                    @click="customEventCreation"
+                    class="create-schedule-btn"
+                    type="primary"
+                    round
+                  >
+                    <el-icon><Calendar /></el-icon>
+                    创建新日程
+                  </el-button>
+                  <el-button
+                    @click="customTaskCreation"
+                    class="create-task-btn"
+                    type="warning"
+                    round
+                  >
+                    <el-icon><List /></el-icon>
+                    创建新任务
+                  </el-button>
+                </div>
               </span>
               <!-- 右侧头像 -->
               <!-- 右侧头像和用户名 -->
@@ -464,10 +475,56 @@
       </div>
     </div>
   </el-dialog>
+  <!-- 添加创建任务的弹窗 -->
+  <el-dialog
+    title="创建新任务"
+    v-model="personalTaskDialogVisible"
+    width="500px"
+    @close="resetTaskDialogFields"
+  >
+    <el-form :model="personalTaskForm" label-width="100px">
+      <el-form-item label="任务名称" required>
+        <el-input
+          v-model="personalTaskForm.name"
+          placeholder="请输入任务名称"
+        />
+      </el-form-item>
+      <el-form-item label="开始时间" required>
+        <el-date-picker
+          v-model="personalTaskForm.start"
+          type="datetime"
+          placeholder="选择开始时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+      <el-form-item label="结束时间" required>
+        <el-date-picker
+          v-model="personalTaskForm.end"
+          type="datetime"
+          placeholder="选择结束时间"
+          format="YYYY-MM-DD HH:mm"
+          value-format="YYYY-MM-DD HH:mm"
+        />
+      </el-form-item>
+      <el-form-item label="任务内容" required>
+        <el-input
+          v-model="personalTaskForm.content"
+          type="textarea"
+          rows="3"
+          placeholder="请输入任务内容"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="personalTaskDialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="createTask">确定</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
-import { Message } from "@element-plus/icons-vue";
+import { Message, Calendar, List } from "@element-plus/icons-vue";
 import VueCal from "vue-cal";
 import "vue-cal/dist/vuecal.css"; // 导入样式
 </script>
@@ -500,6 +557,7 @@ export default {
       eventContent: "",
       tagDialogOpen: false,
       taskDialogVisible: false,
+      personalTaskDialogVisible: false,
       taskForm: {
         title: "",
         content: "",
@@ -507,10 +565,16 @@ export default {
         end: "",
         classId: "", // 选中的班级ID
       },
+      personalTaskForm: {
+        name: "",
+        start: "",
+        end: "",
+        content: "",
+      },
       classList: [], // 班级列表
       taskList: [], // 存储任务列表
       showTaskList: false, // 控任务列表的显示
-      greetingMessage: "", // 添加问候信息的状态
+      greetingMessage: "", // 加问候信息的状态
       viewMode: "calendar", // 添加视图模式控制
       activities: [], // 添加活动列表数据
       loading: false, // 添加加载状态
@@ -596,7 +660,7 @@ export default {
       this.updateMessage();
     }
     this.updateUser();
-    this.updateEvents(); // 只需要调用一次，会同时获取活动和任务数据
+    this.updateEvents(); // 只需要调用一次，会同时获取活和任务数据
   },
   watch: {
     // 监听视图模式变化
@@ -661,7 +725,7 @@ export default {
       if (hour < 12) {
         greeting = "早上好！新的一天，新的开始！";
       } else if (hour < 18) {
-        greeting = "下���好！继续加油！";
+        greeting = "下午好！继续加油！";
       } else {
         greeting = "晚上好！辛苦了一天，意休息！";
       }
@@ -875,6 +939,53 @@ export default {
         console.error("Markdown rendering error:", error);
         return "";
       }
+    },
+    customTaskCreation() {
+      this.personalTaskDialogVisible = true;
+    },
+    resetTaskDialogFields() {
+      this.personalTaskForm = {
+        name: "",
+        start: "",
+        end: "",
+        content: "",
+      };
+    },
+    createTask() {
+      if (
+        !this.personalTaskForm.name.trim() ||
+        !this.personalTaskForm.start ||
+        !this.personalTaskForm.end ||
+        !this.personalTaskForm.content.trim()
+      ) {
+        this.$message.error("请填写完整信息");
+        return;
+      }
+
+      if (
+        new Date(this.personalTaskForm.start) >=
+        new Date(this.personalTaskForm.end)
+      ) {
+        this.$message.error("开始时间必须早于结束时间");
+        return;
+      }
+
+      this.$apis
+        .createTask({
+          name: this.personalTaskForm.name,
+          start: this.personalTaskForm.start,
+          end: this.personalTaskForm.end,
+          content: this.personalTaskForm.content,
+        })
+        .then(() => {
+          this.personalTaskDialogVisible = false;
+          this.resetTaskDialogFields();
+          this.updateEvents();
+          this.$message.success("任务创建成功");
+        })
+        .catch((error) => {
+          this.$message.error(`创建失败：${error.message}`);
+        });
     },
   },
 };
@@ -1259,5 +1370,51 @@ html {
   font-size: 85%;
   background-color: rgba(27, 31, 35, 0.05);
   border-radius: 6px;
+}
+
+.action-buttons {
+  display: inline-flex;
+  gap: 16px;
+  margin-left: 16px;
+}
+
+.create-schedule-btn {
+  background: linear-gradient(45deg, #4caf50, #45a049);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-task-btn {
+  background: linear-gradient(45deg, #ff9800, #f57c00);
+  border: none;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-schedule-btn:hover,
+.create-task-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.create-schedule-btn:active,
+.create-task-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-icon) {
+  font-size: 16px;
 }
 </style>
