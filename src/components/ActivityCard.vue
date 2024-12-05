@@ -659,8 +659,6 @@ export default {
 .detail-content {
   color: #606266;
   line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
   text-align: left;
 }
 
