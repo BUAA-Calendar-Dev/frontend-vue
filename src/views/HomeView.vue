@@ -47,19 +47,19 @@
             <!-- Tag + -->
             <div class="menu-item" @click="goToTags">
               <i class="el-icon-collection-tag"></i>
-              <span>管理班级</span>
+              <span>任务标签</span>
             </div>
 
             <!-- 活动 -->
-            <div class="menu-item" @click="goToActivities">
+            <div class="menu-item" @click="createClassTask">
               <i class="el-icon-bell"></i>
               <span>创建班级提醒</span>
             </div>
 
             <!-- 浏览全校活动 / DDL -->
-            <div class="menu-item" @click="goToSchoolActivities">
-              <i class="el-icon-time"></i>
-              <span>DDL</span>
+            <div class="menu-item" @click="goToActivities">
+              <i class="el-icon-bell"></i>
+              <span>活动</span>
             </div>
             <div class="menu-item" @click="goToDDL">
               <i class="el-icon-document"></i>
@@ -300,9 +300,9 @@
             </el-table>
           </div>
 
-          <!-- 弹窗：创建新事件 -->
+          <!-- 弹窗：创建新日程 -->
           <el-dialog
-            title="创建新事件"
+            title="创建新日程"
             v-model="eventDialogVisible"
             width="500px"
             @close="resetDialogFields"
@@ -467,7 +467,7 @@
   </el-dialog>
   <!-- 添加创建任务的弹窗 -->
   <el-dialog
-    title="创建新任"
+    title="创建新任务"
     v-model="personalTaskDialogVisible"
     width="500px"
     @close="resetTaskDialogFields"
@@ -858,12 +858,11 @@ export default {
     },
     goToActivities() {
       // 教师创建活动
-      if (this.$var.auth.role === "teacher") {
-        this.taskDialogVisible = true;
-        this.getClassList();
-      } else {
-        this.$router.push({ path: "/activity" });
-      }
+      this.$router.push({ path: "/activity" });
+    },
+    createClassTask() {
+      this.taskDialogVisible = true;
+      this.getClassList();
     },
     /**
      * @deprecated use `goToActivities` instead
