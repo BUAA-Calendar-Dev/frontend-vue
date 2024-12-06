@@ -645,8 +645,8 @@ export default {
       messageList: [],
       unread: 0,
       message_drawer: false,
-      userAvatar: require("@/assets/default-avatar.png"), // 设置默认头像
-      username: "Unknown User", // 用户名
+      userAvatar: "/favicon.ico",
+      username: "",
       selectedDate: "",
       dialogVisible: false, // 用于控制 dialog 的显示与隐藏
       specialHours: [],
@@ -762,12 +762,13 @@ export default {
       ElMessageBox.alert("登录失效！", { type: "warning" });
       this.$router.push({ path: "/" });
     } else {
+      // 先更新用户信息
+      await this.updateUser();
       // 加载标签列表
       await this.loadTags();
       // 加载其他数据
       await this.updateEvents();
       await this.updateMessage();
-      this.username = this.$var.auth.username;
     }
   },
   watch: {
@@ -879,12 +880,16 @@ export default {
         this.taskList = response.data.tasks;
       });
     },
-    updateUser() {
-      this.$apis.getUserInfo(this.$var.auth.id).then((response) => {
-        this.username = response.data.name || response.data.username;
-        this.userAvatar = response.data.avatar;
-        console.log(response.data.username);
-      });
+    async updateUser() {
+      try {
+        const response = await this.$apis.getUserInfo(this.$var.auth.id);
+        if (response.data) {
+          this.username = response.data.name || response.data.username; // 优先使用 name，如果没有则使用 username
+          this.userAvatar = response.data.avatar || "/favicon.ico";
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
     },
     async updateEvents() {
       try {
