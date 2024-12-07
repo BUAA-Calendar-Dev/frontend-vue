@@ -676,7 +676,7 @@ export default {
       taskList: [], // 存储任务列表
       showTaskList: false, // 控任务列表的显示
       greetingMessage: "", // 加问候信息的状态
-      viewMode: "calendar", // 添加视图模式控制
+      viewMode: "", // 将默认值改为空字符串
       activities: [], // 添加活动列表数据
       loading: false, // 添加加载状态
       eventDetailVisible: false,
@@ -687,8 +687,9 @@ export default {
       tagList: [], // 存储标签列表
       loadingTags: false,
       preferences: {
-        activityColor: "#409EFF", // 默认颜色
+        activityColor: "#409EFF",
         taskColor: "#F56C6C",
+        defaultView: "calendar", // 添加默认视图设置
       },
     };
   },
@@ -784,6 +785,7 @@ export default {
       this.$router.push({ path: "/" });
     } else {
       await this.loadPreferences(); // 先加载偏好设置
+      this.viewMode = this.preferences.defaultView; // 根据偏好设置初始化视图模式
       await this.updateUser();
       await this.loadTags();
       await this.updateEvents();
