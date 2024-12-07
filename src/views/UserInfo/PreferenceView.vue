@@ -96,16 +96,14 @@
         <h4 class="section-title">其他设置</h4>
 
         <div class="preference-item">
-          <span class="item-label">主题模式</span>
+          <span class="item-label">主题颜色</span>
           <div class="item-content">
-            <el-radio-group
+            <el-color-picker
               v-model="preferences.theme"
+              :show-alpha="false"
+              format="hex"
               @change="savePreference('theme')"
-            >
-              <el-radio label="light">浅色</el-radio>
-              <el-radio label="dark">深色</el-radio>
-              <el-radio label="auto">跟随系统</el-radio>
-            </el-radio-group>
+            />
           </div>
         </div>
       </div>
@@ -193,7 +191,7 @@ export default {
         activityColor: "#409EFF",
         taskColor: "#F56C6C",
         defaultView: "calendar",
-        theme: "light",
+        theme: "#ffffff",
       },
       loading: false,
     };
@@ -254,7 +252,7 @@ export default {
           activityColor: "#409EFF",
           taskColor: "#F56C6C",
           defaultView: "calendar",
-          theme: "light",
+          theme: "#ffffff",
         };
 
         // 发送整个默认preferences对象

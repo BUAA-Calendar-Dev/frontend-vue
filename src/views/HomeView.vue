@@ -1872,4 +1872,23 @@ html {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   opacity: 0.9;
 }
+
+:deep(.vuecal__cell) {
+  background-color: v-bind("preferences.theme"); /* 单元格背景色 */
+}
+
+:deep(.vuecal__title-bar) {
+  background-color: v-bind("preferences.theme"); /* 标题栏背景色 */
+}
+
+:deep(.vuecal__weekdays-headings) {
+  background-color: v-bind("preferences.theme"); /* 星期标题背景色 */
+}
+
+:deep(.vuecal__menu) {
+  background-color: v-bind("preferences.theme");
+}
+:deep(.vuecal__time-column) {
+  background-color: v-bind("preferences.theme");
+}
 </style>
