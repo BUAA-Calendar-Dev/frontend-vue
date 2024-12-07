@@ -686,6 +686,10 @@ export default {
       updating: false,
       tagList: [], // 存储标签列表
       loadingTags: false,
+      preferences: {
+        activityColor: "#409EFF", // 默认颜色
+        taskColor: "#F56C6C",
+      },
     };
   },
   computed: {
@@ -694,6 +698,9 @@ export default {
         const start = new Date(event.start || event.startTime || event.from);
         const end = new Date(event.end || event.endTime || event.to);
 
+        // 根据事件类型设置不同的颜色
+        const cssClass =
+          event.type === "activity" ? "activity-event" : "task-event";
         // 检查事件是否跨越多天
         if (
           start < end &&
@@ -719,11 +726,25 @@ export default {
             ...event,
             start: formatTime(displayStart),
             end: formatTime(end),
+            cssClass, // 添加 CSS 类名
+            class: "activity-event", // vue-cal 需要的类名属性
+            bgcolor:
+              event.type === "activity"
+                ? this.preferences.activityColor
+                : this.preferences.taskColor,
           };
         }
 
         // 如果事件不跨越多天，直接返回原始事件
-        return event;
+        return {
+          ...event,
+          cssClass, // 添加 CSS 类名
+          class: "activity-event", // vue-cal 需要的类名属性
+          bgcolor:
+            event.type === "activity"
+              ? this.preferences.activityColor
+              : this.preferences.taskColor,
+        };
       });
 
       console.log("calendarEvents: ", calendarEvents);
@@ -762,11 +783,9 @@ export default {
       ElMessageBox.alert("登录失效！", { type: "warning" });
       this.$router.push({ path: "/" });
     } else {
-      // 先更新用户信息
+      await this.loadPreferences(); // 先加载偏好设置
       await this.updateUser();
-      // 加载标签列表
       await this.loadTags();
-      // 加载其他数据
       await this.updateEvents();
       await this.updateMessage();
     }
@@ -1041,7 +1060,7 @@ export default {
       }
     },
     async onEventClick(event) {
-      console.log("Clicked event:", event); // 添加日志
+      console.log("Clicked event:", event); // 添加日
       await this.loadTags(); // 确保标签列表已加载
       // 确保选中的事件包含所有必要的属性
       this.selectedEvent = {
@@ -1207,6 +1226,21 @@ export default {
       this.selectedTask.tags = this.selectedTask.tags.filter(
         (id) => id !== tagId
       );
+    },
+    // 添加加载偏好设置的方法
+    async loadPreferences() {
+      try {
+        const response = await this.$apis.getUserPreferences();
+        if (response.data && response.data.preference) {
+          this.preferences = {
+            ...this.preferences,
+            ...response.data.preference,
+          };
+          console.log(this.preferences);
+        }
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
     },
   },
 };
@@ -1807,5 +1841,35 @@ html {
 .event-detail .tag-item-content,
 .event-detail .tag-color-dot {
   display: none;
+}
+
+.vuecal__event.activity-event {
+  background-color: rgba(253, 156, 66, 0.9);
+  border: 1px solid rgb(233, 136, 46);
+  color: #fff;
+}
+
+.vuecal__event.task-event {
+  background-color: v-bind("preferences.taskColor");
+  border: 1px solid rgb(233, 136, 46);
+  color: #fff;
+}
+
+/* 移除之前的活动颜色相关样式，现在直接使用 bgcolor 属性设置颜色 */
+:deep(.activity-event) {
+  background-color: v-bind("preferences.activityColor");
+  color: #ffffff;
+}
+
+:deep(.vuecal__event:hover) {
+  transform: scale(1.02);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
+}
+
+:deep(.vuecal__event:hover) {
+  transform: scale(1.02);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
 }
 </style>
