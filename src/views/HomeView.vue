@@ -700,8 +700,7 @@ export default {
         const end = new Date(event.end || event.endTime || event.to);
 
         // 根据事件类型设置不同的颜色
-        const cssClass =
-          event.type === "activity" ? "activity-event" : "task-event";
+        const cssClass = event.is_task ? "task-event" : "activity-event";
         // 检查事件是否跨越多天
         if (
           start < end &&
@@ -728,11 +727,10 @@ export default {
             start: formatTime(displayStart),
             end: formatTime(end),
             cssClass, // 添加 CSS 类名
-            class: "activity-event", // vue-cal 需要的类名属性
-            bgcolor:
-              event.type === "activity"
-                ? this.preferences.activityColor
-                : this.preferences.taskColor,
+            class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
+            bgcolor: event.is_task
+              ? this.preferences.taskColor
+              : this.preferences.activityColor,
           };
         }
 
@@ -740,11 +738,10 @@ export default {
         return {
           ...event,
           cssClass, // 添加 CSS 类名
-          class: "activity-event", // vue-cal 需要的类名属性
-          bgcolor:
-            event.type === "activity"
-              ? this.preferences.activityColor
-              : this.preferences.taskColor,
+          class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
+          bgcolor: event.is_task
+            ? this.preferences.taskColor
+            : this.preferences.activityColor,
         };
       });
 
@@ -1860,6 +1857,12 @@ html {
 /* 移除之前的活动颜色相关样式，现在直接使用 bgcolor 属性设置颜色 */
 :deep(.activity-event) {
   background-color: v-bind("preferences.activityColor");
+  color: #ffffff;
+}
+
+/* 移除之前的活动颜色相关样式，现在直接使用 bgcolor 属性设置颜色 */
+:deep(.task-event) {
+  background-color: v-bind("preferences.taskColor");
   color: #ffffff;
 }
 
