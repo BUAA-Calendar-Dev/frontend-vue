@@ -12,3 +12,13 @@ export function createEvent(EventStart, EventEnd, EventName, EventContent) {
     content: EventContent,
   });
 }
+
+export function modifyEventColor(eventId, color, isTask = false) {
+  return axios.post(
+    process.env.VUE_APP_ROOT_URL + `/api/event/e/${eventId}/color`,
+    {
+      color: color,
+      "is-task": isTask,
+    }
+  );
+}

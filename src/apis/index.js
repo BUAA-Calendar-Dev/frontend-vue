@@ -1,7 +1,7 @@
 import { getHelloWorld } from "@/apis/demo";
 import { getMessageList, setReadMessage } from "@/apis/message-receiver";
 import { getUser } from "@/apis/user";
-import { getEvent, createEvent } from "@/apis/event";
+import { getEvent, createEvent, modifyEventColor } from "@/apis/event";
 import { login, register } from "@/apis/authentic";
 import {
   getUserInfo,
@@ -116,6 +116,11 @@ export default new (class {
      * post '/api/event
      */
     this.createEvent = createEvent;
+
+    /**
+     * post '/api/event/e/{id}/color'
+     */
+    this.modifyEventColor = modifyEventColor;
 
     /**
      * post '/api/user/login'

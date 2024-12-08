@@ -358,7 +358,7 @@
   <!-- Drawer: message list (student) -->
   <el-drawer v-model="message_drawer" :direction="'rtl'">
     <template #header>
-      <h4>到的消息</h4>
+      <h4>到���消息</h4>
     </template>
     <MessageList :messages="messageList" :update="updateMessage" />
   </el-drawer>
@@ -425,9 +425,18 @@
     width="600px"
   >
     <div v-if="selectedEvent" class="event-detail">
-      <!-- 标题和标签部分 -->
+      <!-- 现有的标题和标签部分 -->
       <div class="detail-header">
         <h3 class="detail-title">{{ selectedEvent.title }}</h3>
+        <!-- 添加颜色选择器 -->
+        <div class="color-picker-section">
+          <span class="label">事件颜色：</span>
+          <el-color-picker
+            v-model="selectedEvent.color"
+            @change="handleColorChange"
+            show-alpha
+          />
+        </div>
         <div
           class="event-tags"
           v-if="selectedEvent.tags && selectedEvent.tags.length > 0"
@@ -728,9 +737,7 @@ export default {
             end: formatTime(end),
             cssClass, // 添加 CSS 类名
             class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
-            bgcolor: event.is_task
-              ? this.preferences.taskColor
-              : this.preferences.activityColor,
+            bgcolor: event.color,
           };
         }
 
@@ -739,9 +746,7 @@ export default {
           ...event,
           cssClass, // 添加 CSS 类名
           class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
-          bgcolor: event.is_task
-            ? this.preferences.taskColor
-            : this.preferences.activityColor,
+          bgcolor: event.color,
         };
       });
 
@@ -852,7 +857,7 @@ export default {
       if (hour < 12) {
         greeting = "早上好！新的一天，新的开始！";
       } else if (hour < 18) {
-        greeting = "下午好！继续加油！";
+        greeting = "下午好！继续加油��";
       } else {
         greeting = "晚上好！辛苦了一天，意休息！";
       }
@@ -1059,14 +1064,18 @@ export default {
       }
     },
     async onEventClick(event) {
-      console.log("Clicked event:", event); // 添加日
-      await this.loadTags(); // 确保标签列表已加载
-      // 确保选中的事件包含所有必要的属性
+      console.log("Clicked event:", event);
+      await this.loadTags();
       this.selectedEvent = {
         ...event,
-        tags: event.tags || [], // 确保有 tags 属性
-        title: event.name || event.title, // 统一标题字段
-        content: event.content || "", // 确保有 content 属性
+        tags: event.tags || [],
+        title: event.name || event.title,
+        content: event.content || "",
+        color:
+          event.color ||
+          (event.is_task
+            ? this.preferences.taskColor
+            : this.preferences.activityColor),
       };
       this.eventDetailVisible = true;
     },
@@ -1239,6 +1248,27 @@ export default {
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
+      }
+    },
+    async handleColorChange(color) {
+      try {
+        await this.$apis.modifyEventColor(
+          this.selectedEvent.id,
+          color,
+          this.selectedEvent.is_task
+        );
+
+        // 更新本地事件列表中的颜色
+        const eventIndex = this.events.findIndex(
+          (e) => e.id === this.selectedEvent.id
+        );
+        if (eventIndex !== -1) {
+          this.events[eventIndex].color = color;
+        }
+
+        this.$message.success("颜色修改成功");
+      } catch (error) {
+        this.$message.error("修改颜色失败：" + error.message);
       }
     },
   },
@@ -1879,7 +1909,7 @@ html {
 }
 
 :deep(.vuecal__cell) {
-  background-color: v-bind("preferences.theme"); /* 单元格背景色 */
+  background-color: v-bind("preferences.theme"); /* 单元背景色 */
 }
 
 :deep(.vuecal__title-bar) {
@@ -1895,5 +1925,18 @@ html {
 }
 :deep(.vuecal__time-column) {
   background-color: v-bind("preferences.theme");
+}
+
+.color-picker-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
+  gap: 8px;
+}
+
+.color-picker-section .label {
+  font-size: 14px;
+  color: #606266;
 }
 </style>
