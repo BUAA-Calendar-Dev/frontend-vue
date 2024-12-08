@@ -358,7 +358,7 @@
   <!-- Drawer: message list (student) -->
   <el-drawer v-model="message_drawer" :direction="'rtl'">
     <template #header>
-      <h4>到���消息</h4>
+      <h4>收到消息</h4>
     </template>
     <MessageList :messages="messageList" :update="updateMessage" />
   </el-drawer>
@@ -428,14 +428,24 @@
       <!-- 现有的标题和标签部分 -->
       <div class="detail-header">
         <h3 class="detail-title">{{ selectedEvent.title }}</h3>
-        <!-- 添加颜色选择器 -->
+        <!-- 修改颜色选择器 -->
         <div class="color-picker-section">
           <span class="label">事件颜色：</span>
-          <el-color-picker
-            v-model="selectedEvent.color"
-            @change="handleColorChange"
-            show-alpha
-          />
+          <div class="color-options">
+            <el-radio-group
+              v-model="selectedEvent.color"
+              @change="handleColorChange"
+            >
+              <el-radio-button
+                v-for="color in presetColors"
+                :key="color.value"
+                :label="color.value"
+                :class="['color-option', color.class]"
+              >
+                {{ color.label }}
+              </el-radio-button>
+            </el-radio-group>
+          </div>
         </div>
         <div
           class="event-tags"
@@ -700,6 +710,13 @@ export default {
         taskColor: "#F56C6C",
         defaultView: "calendar", // 添加默认视图设置
       },
+      presetColors: [
+        { value: "blue", label: "蓝色", class: "event-blue" },
+        { value: "green", label: "绿色", class: "event-green" },
+        { value: "orange", label: "橙色", class: "event-orange" },
+        { value: "purple", label: "紫色", class: "event-purple" },
+        { value: "red", label: "红色", class: "event-red" },
+      ],
     };
   },
   computed: {
@@ -708,8 +725,19 @@ export default {
         const start = new Date(event.start || event.startTime || event.from);
         const end = new Date(event.end || event.endTime || event.to);
 
-        // 根据事件类型设置不同的颜色
-        const cssClass = event.is_task ? "task-event" : "activity-event";
+        // 根据事件类型和颜色设置不同的 CSS 类
+        let cssClass = event.is_task ? "task-event" : "activity-event";
+
+        // 如果有预设颜色，添加对应的颜色类
+        if (event.color) {
+          const colorClass = this.presetColors.find(
+            (c) => c.value === event.color
+          )?.class;
+          if (colorClass) {
+            cssClass = colorClass;
+          }
+        }
+
         // 检查事件是否跨越多天
         if (
           start < end &&
@@ -735,23 +763,20 @@ export default {
             ...event,
             start: formatTime(displayStart),
             end: formatTime(end),
-            cssClass, // 添加 CSS 类名
-            class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
-            bgcolor: event.color,
+            cssClass,
+            class: cssClass,
           };
         }
 
         // 如果事件不跨越多天，直接返回原始事件
         return {
           ...event,
-          cssClass, // 添加 CSS 类名
-          class: event.is_task ? "task-event" : "activity-event", // vue-cal 需要的类名属性
-          bgcolor: event.color,
+          cssClass,
+          class: cssClass,
         };
       });
 
       console.log("calendarEvents: ", calendarEvents);
-
       return calendarEvents;
     },
 
@@ -857,7 +882,7 @@ export default {
       if (hour < 12) {
         greeting = "早上好！新的一天，新的开始！";
       } else if (hour < 18) {
-        greeting = "下午好！继续加油��";
+        greeting = "下午好！继续加油！";
       } else {
         greeting = "晚上好！辛苦了一天，意休息！";
       }
@@ -1938,5 +1963,90 @@ html {
 .color-picker-section .label {
   font-size: 14px;
   color: #606266;
+}
+
+/* 预设颜色选项的样式 */
+.color-options {
+  display: flex;
+  gap: 8px;
+}
+
+.color-option {
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* 日历事件的预设颜色样式 */
+:deep(.event-blue) {
+  background-color: #409eff !important;
+  border-color: #409eff !important;
+  color: white !important;
+}
+
+:deep(.event-green) {
+  background-color: #67c23a !important;
+  border-color: #67c23a !important;
+  color: white !important;
+}
+
+:deep(.event-orange) {
+  background-color: #e6a23c !important;
+  border-color: #e6a23c !important;
+  color: white !important;
+}
+
+:deep(.event-purple) {
+  background-color: #d88aee !important;
+  border-color: #d88aee !important;
+  color: white !important;
+}
+
+:deep(.event-red) {
+  background-color: #f56c6c !important;
+  border-color: #f56c6c !important;
+  color: white !important;
+}
+
+/* 颜色选项按钮样式 */
+:deep(.el-radio-button__inner) {
+  border: none;
+  padding: 8px 16px;
+}
+
+:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  box-shadow: none;
+}
+
+/* 为每个颜色选项按钮添加对应的背景色 */
+:deep(.el-radio-button.event-blue .el-radio-button__inner) {
+  background-color: #409eff;
+  color: white;
+}
+
+:deep(.el-radio-button.event-green .el-radio-button__inner) {
+  background-color: #67c23a;
+  color: white;
+}
+
+:deep(.el-radio-button.event-orange .el-radio-button__inner) {
+  background-color: #e6a23c;
+  color: white;
+}
+
+:deep(.el-radio-button.event-purple .el-radio-button__inner) {
+  background-color: #d88aee;
+  color: white;
+}
+
+:deep(.el-radio-button.event-red .el-radio-button__inner) {
+  background-color: #f56c6c;
+  color: white;
+}
+
+/* 悬停效果 */
+:deep(.el-radio-button:hover .el-radio-button__inner) {
+  opacity: 0.9;
 }
 </style>
