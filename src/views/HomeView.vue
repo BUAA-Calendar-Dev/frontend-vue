@@ -840,7 +840,9 @@ export default {
     },
     resetDialogFields() {
       this.eventName = "";
-      this.eventDate = "";
+      this.eventStart = "";
+      this.eventEnd = "";
+      this.eventContent = "";
     },
     createEvent() {
       if (
@@ -860,7 +862,7 @@ export default {
           })
           .then(() => {
             this.eventDialogVisible = false;
-            this.resetDialogFields();
+            this.resetDialogFields(); // 清空表单
             this.$message.success("事件创建成功");
           })
           .catch((error) => {
