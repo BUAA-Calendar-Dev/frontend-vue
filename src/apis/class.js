@@ -62,3 +62,13 @@ export function getClassTeachers(classId) {
     `${process.env.VUE_APP_ROOT_URL}/api/class/${classId}/teacher`
   );
 }
+
+export function sendClassMessage(classId, title, content) {
+  return axios.post(
+    `${process.env.VUE_APP_ROOT_URL}/api/message/class/${classId}`,
+    {
+      title,
+      content,
+    }
+  );
+}

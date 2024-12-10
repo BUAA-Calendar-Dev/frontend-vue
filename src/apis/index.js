@@ -47,6 +47,7 @@ import {
   createClass,
   getClassStudents,
   getClassTeachers,
+  sendClassMessage,
 } from "@/apis/class";
 import { impowerTeacher, resetUserPassword, getAllUsers } from "./user";
 
@@ -423,5 +424,10 @@ export default new (class {
      * post '/api/task/{id}/modify'
      */
     this.updateTask = updateTask;
+
+    /**
+     * 向班级发送消息
+     */
+    this.sendClassMessage = sendClassMessage;
   }
 })();

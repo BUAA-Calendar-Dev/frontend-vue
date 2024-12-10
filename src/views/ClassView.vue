@@ -59,8 +59,12 @@
               </el-button>
               <template v-if="$var.auth.role == 'teacher'">
                 <el-button type="primary">管理班级</el-button>
-                <el-button type="primary">布置班级任务</el-button>
-                <el-button type="primary">发布班级消息</el-button>
+                <el-button type="primary" @click="openTaskDialog(item.id)"
+                  >布置班级任务</el-button
+                >
+                <el-button type="primary" @click="openMessageDialog(item.id)"
+                  >发布班级消息</el-button
+                >
               </template>
             </div>
           </el-card>
@@ -131,6 +135,75 @@
           </template>
         </el-table-column>
       </el-table>
+    </el-dialog>
+    <el-dialog
+      v-model="showMessageDialog"
+      title="发布班级消息"
+      width="50%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="messageForm" label-width="80px">
+        <el-form-item label="消息标题">
+          <el-input v-model="messageForm.title" placeholder="请输入消息标题" />
+        </el-form-item>
+        <el-form-item label="消息内容">
+          <el-input
+            v-model="messageForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入消息内容"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showMessageDialog = false">取消</el-button>
+          <el-button type="primary" @click="sendMessage">发送</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="showTaskDialog"
+      title="布置班级任务"
+      width="60%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        :model="taskForm"
+        :rules="taskRules"
+        ref="taskFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="任务标题" prop="title">
+          <el-input v-model="taskForm.title" placeholder="请输入任务标题" />
+        </el-form-item>
+        <el-form-item label="任务内容" prop="content">
+          <el-input
+            v-model="taskForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入任务内容"
+          />
+        </el-form-item>
+        <el-form-item label="时间范围" prop="timeRange">
+          <el-date-picker
+            v-model="taskForm.timeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            :default-time="defaultTime"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showTaskDialog = false">取消</el-button>
+          <el-button type="primary" @click="submitTask">发布任务</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -325,6 +398,42 @@ export default {
       currentDDLList: [],
       showDDLList: false,
       tableHeight: 0,
+      showMessageDialog: false,
+      messageForm: {
+        title: "",
+        content: "",
+        classId: null,
+      },
+      showTaskDialog: false,
+      taskForm: {
+        title: "",
+        content: "",
+        tags: [],
+        timeRange: null,
+        classId: null,
+      },
+      taskRules: {
+        title: [
+          { required: true, message: "请输入任务标题", trigger: "blur" },
+          {
+            min: 2,
+            max: 50,
+            message: "长度在 2 到 50 个字符",
+            trigger: "blur",
+          },
+        ],
+        content: [
+          { required: true, message: "请输入任务内容", trigger: "blur" },
+        ],
+        timeRange: [
+          { required: true, message: "请选择时间范围", trigger: "change" },
+        ],
+      },
+      defaultTags: ["作业", "实验", "项目", "测试", "其他"],
+      defaultTime: [
+        new Date(2000, 1, 1, 8, 0, 0),
+        new Date(2000, 1, 1, 23, 59, 59),
+      ],
     };
   },
   methods: {
@@ -366,6 +475,90 @@ export default {
         });
       } catch (error) {
         this.$utils.handleHttpException(error);
+      }
+    },
+    openMessageDialog(classId) {
+      this.messageForm.classId = classId;
+      this.showMessageDialog = true;
+    },
+    async sendMessage() {
+      if (!this.messageForm.title || !this.messageForm.content) {
+        this.$message.warning("请填写完整的消息信息");
+        return;
+      }
+
+      try {
+        await this.$apis.sendClassMessage(
+          this.messageForm.classId,
+          this.messageForm.title,
+          this.messageForm.content
+        );
+        this.$message.success("消息发送成功");
+        this.showMessageDialog = false;
+        // 重置表单
+        this.messageForm.title = "";
+        this.messageForm.content = "";
+        this.messageForm.classId = null;
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+    openTaskDialog(classId) {
+      this.taskForm.classId = classId;
+      this.showTaskDialog = true;
+    },
+    async submitTask() {
+      if (!this.$refs.taskFormRef) return;
+
+      try {
+        await this.$refs.taskFormRef.validate();
+
+        // 处理时间范围
+        const [startTime, endTime] = this.taskForm.timeRange;
+
+        await this.$apis.assignTaskToClass(this.taskForm.classId, {
+          title: this.taskForm.title,
+          content: this.taskForm.content,
+          tags: this.taskForm.tags,
+          start: startTime
+            .toLocaleString("zh-CN", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+            .replace(/\//g, "-"),
+          end: endTime
+            .toLocaleString("zh-CN", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+            .replace(/\//g, "-"),
+        });
+
+        this.$message.success("任务发布成功");
+        this.showTaskDialog = false;
+        // 重置表单
+        this.$refs.taskFormRef.resetFields();
+        this.taskForm.classId = null;
+        this.taskForm.tags = [];
+
+        // 刷新任务列表（如果需要的话）
+        if (this.showDDLList) {
+          this.updateClassDDLList(this.taskForm.classId);
+        }
+      } catch (error) {
+        if (error.name === "ValidationError") {
+          this.$message.warning("请完善表单信息");
+        } else {
+          this.$utils.handleHttpException(error);
+        }
       }
     },
   },
