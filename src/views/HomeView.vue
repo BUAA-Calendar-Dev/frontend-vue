@@ -173,11 +173,11 @@
           <!-- 添加视图切换按钮 -->
           <div class="view-switch">
             <el-radio-group v-model="viewMode" size="large">
-              <el-radio-button label="calendar" style="color: #000"
-                >日历视图</el-radio-button
+              <el-radio-button label="calendar"
+                ><font color="#000">日历视图</font></el-radio-button
               >
-              <el-radio-button label="list" style="color: #000"
-                >列表视图</el-radio-button
+              <el-radio-button label="list"
+                ><font color="#000">列表视图</font></el-radio-button
               >
             </el-radio-group>
           </div>
@@ -1945,7 +1945,7 @@ html {
 }
 
 :deep(.vuecal__cell) {
-  background-color: v-bind("preferences.theme"); /* 单元��景色 */
+  background-color: v-bind("preferences.theme"); /* 单元格背景色 */
 }
 
 :deep(.vuecal__title-bar) {
@@ -2026,8 +2026,12 @@ html {
   padding: 8px 16px;
 }
 
-:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
-  box-shadow: none;
+:deep(.el-radio-button.is-active.color-option > span) {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+:deep(.el-radio-button__original-radio .el-radio-button__inner) {
   background-color: inherit;
 }
 
@@ -2062,10 +2066,13 @@ html {
 }
 
 :deep(.el-radio-button.is-active .el-radio-button__inner) {
+  font-weight: 600;
+}
+
+:deep(.el-radio-button.is-active.color-option .el-radio-button__inner) {
   color: white !important;
   background-color: transparent !important;
   border-color: #dcdfe6 !important;
-  box-shadow: -1px 0 0 0 #dcdfe6 !important;
   transform: scale(1.05);
 }
 
@@ -2080,14 +2087,13 @@ html {
 
 /* 修改视图切换按钮的样式 */
 :deep(.el-radio-button__inner) {
-  color: #000 !important;
+  color: #fff !important;
 }
 
 :deep(.el-radio-button.is-active .el-radio-button__inner) {
   color: #000 !important;
   background-color: transparent !important;
   border-color: #dcdfe6 !important;
-  box-shadow: -1px 0 0 0 #dcdfe6 !important;
 }
 
 :deep(.el-radio-button:not(.is-active):hover .el-radio-button__inner) {
