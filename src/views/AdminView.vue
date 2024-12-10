@@ -816,7 +816,7 @@ export default {
       this.editForm = {
         id: activity.id,
         title: activity.name || activity.content?.title || "",
-        content: activity.content || "",
+        content: activity.content.content || "",
         start: activity.start || activity.content?.start || "",
         end: activity.end || activity.content?.end || "",
       };
