@@ -1291,7 +1291,9 @@ export default {
 
         // 更新本地事件列表中的颜色
         const eventIndex = this.events.findIndex(
-          (e) => e.id === this.selectedEvent.id
+          (e) =>
+            e.id === this.selectedEvent.id &&
+            e.is_task === this.selectedEvent.is_task
         );
         if (eventIndex !== -1) {
           this.events[eventIndex].color = color;
