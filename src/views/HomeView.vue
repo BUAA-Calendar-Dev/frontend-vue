@@ -173,8 +173,12 @@
           <!-- 添加视图切换按钮 -->
           <div class="view-switch">
             <el-radio-group v-model="viewMode" size="large">
-              <el-radio-button label="calendar">日历视图</el-radio-button>
-              <el-radio-button label="list">列表视图</el-radio-button>
+              <el-radio-button label="calendar" style="color: #000"
+                >日历视图</el-radio-button
+              >
+              <el-radio-button label="list" style="color: #000"
+                >列表视图</el-radio-button
+              >
             </el-radio-group>
           </div>
 
@@ -1291,6 +1295,9 @@ export default {
           this.events[eventIndex].color = color;
         }
 
+        // 强制更新视图
+        this.$forceUpdate();
+
         this.$message.success("颜色修改成功");
       } catch (error) {
         this.$message.error("修改颜色失败：" + error.message);
@@ -1934,7 +1941,7 @@ html {
 }
 
 :deep(.vuecal__cell) {
-  background-color: v-bind("preferences.theme"); /* 单元背景色 */
+  background-color: v-bind("preferences.theme"); /* 单元��景色 */
 }
 
 :deep(.vuecal__title-bar) {
@@ -2017,36 +2024,69 @@ html {
 
 :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
   box-shadow: none;
+  background-color: inherit;
 }
 
-/* 为每个颜色选项按钮添加对应的背景色 */
 :deep(.el-radio-button.event-blue .el-radio-button__inner) {
   background-color: #409eff;
   color: white;
+  border-color: transparent;
 }
 
 :deep(.el-radio-button.event-green .el-radio-button__inner) {
   background-color: #67c23a;
   color: white;
+  border-color: transparent;
 }
 
 :deep(.el-radio-button.event-orange .el-radio-button__inner) {
   background-color: #e6a23c;
   color: white;
+  border-color: transparent;
 }
 
 :deep(.el-radio-button.event-purple .el-radio-button__inner) {
   background-color: #d88aee;
   color: white;
+  border-color: transparent;
 }
 
 :deep(.el-radio-button.event-red .el-radio-button__inner) {
   background-color: #f56c6c;
   color: white;
+  border-color: transparent;
 }
 
-/* 悬停效果 */
+:deep(.el-radio-button.is-active .el-radio-button__inner) {
+  color: white !important;
+  background-color: transparent !important;
+  border-color: #dcdfe6 !important;
+  box-shadow: -1px 0 0 0 #dcdfe6 !important;
+  transform: scale(1.05);
+}
+
 :deep(.el-radio-button:hover .el-radio-button__inner) {
   opacity: 0.9;
+  transform: scale(1.05);
+}
+
+:deep(.el-radio-button .el-radio-button__inner) {
+  transition: all 0.3s ease;
+}
+
+/* 修改视图切换按钮的样式 */
+:deep(.el-radio-button__inner) {
+  color: #000 !important;
+}
+
+:deep(.el-radio-button.is-active .el-radio-button__inner) {
+  color: #000 !important;
+  background-color: transparent !important;
+  border-color: #dcdfe6 !important;
+  box-shadow: -1px 0 0 0 #dcdfe6 !important;
+}
+
+:deep(.el-radio-button:not(.is-active):hover .el-radio-button__inner) {
+  color: #000 !important;
 }
 </style>
