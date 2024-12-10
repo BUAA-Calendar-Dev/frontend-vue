@@ -12,6 +12,66 @@
     <div class="action-section-placeholder"></div>
   </div>
   <div class="main activity-main" v-if="navChoosed == '活动管理'">
+    <el-divider> 发布新的活动 </el-divider>
+    <div class="new-activity-form">
+      <el-form :model="newActivityForm" label-width="100px">
+        <el-form-item label="活动名称" required>
+          <el-input
+            v-model="newActivityForm.name"
+            placeholder="请输入活动名称"
+          />
+        </el-form-item>
+
+        <el-form-item label="开始时间" required>
+          <el-date-picker
+            v-model="newActivityForm.start"
+            type="datetime"
+            placeholder="选择开始时间"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
+            :disabled-date="disablePastDates"
+            :shortcuts="dateShortcuts"
+          />
+        </el-form-item>
+
+        <el-form-item label="结束时间" required>
+          <el-date-picker
+            v-model="newActivityForm.end"
+            type="datetime"
+            placeholder="选择结束时间"
+            format="YYYY-MM-DD HH:mm"
+            value-format="YYYY-MM-DD HH:mm"
+            :disabled-date="disablePastDates"
+            :shortcuts="dateShortcuts"
+          />
+        </el-form-item>
+
+        <el-form-item label="活动内容" required>
+          <el-input
+            v-model="newActivityForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入活动内容"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <div class="form-buttons">
+            <div class="left-buttons">
+              <el-button type="text" @click="previewContent"
+                >Markdown 预览</el-button
+              >
+            </div>
+            <div class="right-buttons">
+              <el-button type="primary" @click="handleCreateSubmit"
+                >发布活动</el-button
+              >
+              <el-button @click="resetNewActivityForm">重置</el-button>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+    </div>
     <el-divider> 已发布的活动 </el-divider>
     <div class="activity-container">
       <el-card
@@ -86,66 +146,6 @@
           ></div>
         </div>
       </el-card>
-    </div>
-    <el-divider> 发布新的活动 </el-divider>
-    <div class="new-activity-form">
-      <el-form :model="newActivityForm" label-width="100px">
-        <el-form-item label="活动名称" required>
-          <el-input
-            v-model="newActivityForm.name"
-            placeholder="请输入活动名称"
-          />
-        </el-form-item>
-
-        <el-form-item label="开始时间" required>
-          <el-date-picker
-            v-model="newActivityForm.start"
-            type="datetime"
-            placeholder="选择开始时间"
-            format="YYYY-MM-DD HH:mm"
-            value-format="YYYY-MM-DD HH:mm"
-            :disabled-date="disablePastDates"
-            :shortcuts="dateShortcuts"
-          />
-        </el-form-item>
-
-        <el-form-item label="结束时间" required>
-          <el-date-picker
-            v-model="newActivityForm.end"
-            type="datetime"
-            placeholder="选择结束时间"
-            format="YYYY-MM-DD HH:mm"
-            value-format="YYYY-MM-DD HH:mm"
-            :disabled-date="disablePastDates"
-            :shortcuts="dateShortcuts"
-          />
-        </el-form-item>
-
-        <el-form-item label="活动内容" required>
-          <el-input
-            v-model="newActivityForm.content"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入活动内容"
-          />
-        </el-form-item>
-
-        <el-form-item>
-          <div class="form-buttons">
-            <div class="left-buttons">
-              <el-button type="text" @click="previewContent"
-                >Markdown 预览</el-button
-              >
-            </div>
-            <div class="right-buttons">
-              <el-button type="primary" @click="handleCreateSubmit"
-                >发布活动</el-button
-              >
-              <el-button @click="resetNewActivityForm">重置</el-button>
-            </div>
-          </div>
-        </el-form-item>
-      </el-form>
     </div>
   </div>
   <div class="main class-main" v-if="navChoosed == '班级管理'">
