@@ -58,7 +58,11 @@
                 查看班级任务
               </el-button>
               <template v-if="$var.auth.role == 'teacher'">
-                <el-button type="primary">管理班级</el-button>
+                <el-button
+                  type="primary"
+                  @click="openManageTasksDialog(item.id)"
+                  >管理班级任务</el-button
+                >
                 <el-button type="primary" @click="openTaskDialog(item.id)"
                   >布置班级任务</el-button
                 >
@@ -202,6 +206,104 @@
         <span class="dialog-footer">
           <el-button @click="showTaskDialog = false">取消</el-button>
           <el-button type="primary" @click="submitTask">发布任务</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="showManageTasksDialog"
+      title="管理班级任务"
+      width="80%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+    >
+      <el-table :data="allTasks" style="width: 100%">
+        <el-table-column property="title" label="任务名称" min-width="120" />
+        <el-table-column property="content" label="任务内容" min-width="200" />
+        <el-table-column label="时间" min-width="180">
+          <template #default="scope">
+            <div class="task-time">
+              <el-tag size="small" type="info">
+                {{ new Date(scope.row.start).toLocaleString() }}
+              </el-tag>
+              <el-tag size="small" type="warning">
+                {{ new Date(scope.row.end).toLocaleString() }}
+              </el-tag>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="标签" min-width="150">
+          <template #default="scope">
+            <div class="task-tags">
+              <el-tag
+                v-for="tag in scope.row.tags"
+                :key="tag"
+                size="small"
+                class="task-tag"
+                type="success"
+              >
+                {{ tag }}
+              </el-tag>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="scope">
+            <el-button
+              type="primary"
+              size="small"
+              @click="openEditTaskDialog(scope.row, taskForm.classId)"
+            >
+              修改任务
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showManageTasksDialog = false">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog
+      v-model="showEditTaskDialog"
+      title="修改任务"
+      width="60%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        :model="editTaskForm"
+        :rules="taskRules"
+        ref="editTaskFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="任务标题" prop="title">
+          <el-input v-model="editTaskForm.title" placeholder="请输入任务标题" />
+        </el-form-item>
+        <el-form-item label="任务内容" prop="content">
+          <el-input
+            v-model="editTaskForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入任务内容"
+          />
+        </el-form-item>
+        <el-form-item label="任务标签"> TODO </el-form-item>
+        <el-form-item label="时间范围" prop="timeRange">
+          <el-date-picker
+            v-model="editTaskForm.timeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            :default-time="defaultTime"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showEditTaskDialog = false">取消</el-button>
+          <el-button type="primary" @click="submitEditTask">保存修改</el-button>
         </span>
       </template>
     </el-dialog>
@@ -429,11 +531,21 @@ export default {
           { required: true, message: "请选择时间范围", trigger: "change" },
         ],
       },
-      defaultTags: ["作业", "实验", "项目", "测试", "其他"],
       defaultTime: [
         new Date(2000, 1, 1, 8, 0, 0),
         new Date(2000, 1, 1, 23, 59, 59),
       ],
+      showManageTasksDialog: false,
+      allTasks: [],
+      showEditTaskDialog: false,
+      editTaskForm: {
+        id: null,
+        title: "",
+        content: "",
+        tags: [],
+        timeRange: null,
+        classId: null,
+      },
     };
   },
   methods: {
@@ -552,6 +664,82 @@ export default {
         // 刷新任务列表（如果需要的话）
         if (this.showDDLList) {
           this.updateClassDDLList(this.taskForm.classId);
+        }
+      } catch (error) {
+        if (error.name === "ValidationError") {
+          this.$message.warning("请完善表单信息");
+        } else {
+          this.$utils.handleHttpException(error);
+        }
+      }
+    },
+    openManageTasksDialog(classId) {
+      this.fetchAllTasks(classId);
+      this.taskForm.classId = classId;
+      this.showManageTasksDialog = true;
+    },
+    async fetchAllTasks(classId) {
+      try {
+        const response = await this.$apis.getClassTaskList(classId);
+        this.allTasks = response.data.tasks;
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+    openEditTaskDialog(task, classId) {
+      this.editTaskForm = {
+        id: task.id,
+        title: task.title,
+        content: task.content,
+        tags: task.tags || [],
+        timeRange: [new Date(task.start), new Date(task.end)],
+        classId: classId,
+      };
+      this.showEditTaskDialog = true;
+    },
+    async submitEditTask() {
+      if (!this.$refs.editTaskFormRef) return;
+
+      try {
+        await this.$refs.editTaskFormRef.validate();
+
+        const [startTime, endTime] = this.editTaskForm.timeRange;
+
+        await this.$apis.updateTask(this.editTaskForm.id, {
+          title: this.editTaskForm.title,
+          content: this.editTaskForm.content,
+          tags: this.editTaskForm.tags,
+          start: startTime
+            .toLocaleString("zh-CN", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+            .replace(/\//g, "-"),
+          end: endTime
+            .toLocaleString("zh-CN", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+            .replace(/\//g, "-"),
+        });
+
+        this.$message.success("任务修改成功");
+        this.showEditTaskDialog = false;
+
+        // 刷新任务列表
+        this.fetchAllTasks(this.editTaskForm.classId);
+
+        // 如果当前正在显示任务列表，也更新它
+        if (this.showDDLList) {
+          this.updateClassDDLList(this.editTaskForm.classId);
         }
       } catch (error) {
         if (error.name === "ValidationError") {

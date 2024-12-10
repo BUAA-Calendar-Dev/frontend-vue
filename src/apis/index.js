@@ -48,6 +48,7 @@ import {
   getClassStudents,
   getClassTeachers,
   sendClassMessage,
+  getClassTaskList,
 } from "@/apis/class";
 import { impowerTeacher, resetUserPassword, getAllUsers } from "./user";
 
@@ -429,5 +430,10 @@ export default new (class {
      * 向班级发送消息
      */
     this.sendClassMessage = sendClassMessage;
+
+    /**
+     * 获取班级任务列表
+     */
+    this.getClassTaskList = getClassTaskList;
   }
 })();

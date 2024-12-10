@@ -72,3 +72,7 @@ export function sendClassMessage(classId, title, content) {
     }
   );
 }
+
+export function getClassTaskList(classId) {
+  return axios.get(`${process.env.VUE_APP_ROOT_URL}/api/class/${classId}/task`);
+}
