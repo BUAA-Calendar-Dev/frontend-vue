@@ -566,12 +566,7 @@ export default {
       },
       showClassStatsDialog: false,
       classTaskPieChart: null,
-      classStats: {
-        completed: 0,
-        inProgress: 0,
-        overdue: 0,
-        notStarted: 0,
-      },
+      classStats: [0, 0, 0, 0],
     };
   },
   methods: {
@@ -779,17 +774,8 @@ export default {
       this.showClassStatsDialog = true;
       try {
         // 这里替换为实际的 API 调用
-        // const response = await this.$apis.getClassTaskStats(classId);
-        // this.classStats = response.data;
-        console.log(classId);
-
-        // 临时使用模拟数据
-        this.classStats = {
-          completed: 35,
-          inProgress: 20,
-          overdue: 15,
-          notStarted: 30,
-        };
+        const response = await this.$apis.getTaskClassCompletion(classId);
+        this.classStats = response.data;
 
         this.$nextTick(() => {
           this.initClassTaskPieChart();
@@ -840,22 +826,22 @@ export default {
             },
             data: [
               {
-                value: this.classStats.completed,
+                value: this.classStats[0],
                 name: "已完成",
                 itemStyle: { color: "#67C23A" },
               },
               {
-                value: this.classStats.inProgress,
+                value: this.classStats[1],
                 name: "进行中",
                 itemStyle: { color: "#409EFF" },
               },
               {
-                value: this.classStats.overdue,
+                value: this.classStats[2],
                 name: "已逾期",
                 itemStyle: { color: "#F56C6C" },
               },
               {
-                value: this.classStats.notStarted,
+                value: this.classStats[3],
                 name: "未开始",
                 itemStyle: { color: "#E6A23C" },
               },
