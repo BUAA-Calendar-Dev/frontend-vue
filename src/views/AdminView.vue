@@ -7,9 +7,105 @@
       </el-button>
     </div>
     <div class="nav-section">
-      <el-segmented v-model="navChoosed" :options="navOptions" />
+      <el-segmented
+        v-model="navChoosed"
+        :options="navOptions"
+        @change="handleNavChange"
+      />
     </div>
     <div class="action-section-placeholder"></div>
+  </div>
+  <div class="main charts-main" v-if="navChoosed == '数据报表'">
+    <!-- 数据概览卡片 -->
+    <div class="data-overview">
+      <el-row :gutter="20" justify="center" style="margin-top: 20px">
+        <el-col :span="6">
+          <el-card class="data-card">
+            <template #header>
+              <div class="card-header">
+                <span>用户统计</span>
+              </div>
+            </template>
+            <div class="data-content">
+              <div class="total-number">{{ userStats.total }}</div>
+              <div class="sub-numbers">
+                <div class="sub-item">
+                  <span>教师：</span>
+                  <span>{{ userStats.teachers }}</span>
+                </div>
+                <div class="sub-item">
+                  <span>学生：</span>
+                  <span>{{ userStats.students }}</span>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="data-card">
+            <template #header>
+              <div class="card-header">
+                <span>任务统计</span>
+              </div>
+            </template>
+            <div class="data-content">
+              <div class="total-number">{{ taskStats.total }}</div>
+              <div class="sub-numbers">
+                <div class="sub-item">
+                  <span>已完成：</span>
+                  <span>{{ taskStats.completed }}</span>
+                </div>
+                <div class="sub-item">
+                  <span>进行中：</span>
+                  <span>{{ taskStats.inProgress }}</span>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="data-card">
+            <template #header>
+              <div class="card-header">
+                <span>活动统计</span>
+              </div>
+            </template>
+            <div class="data-content">
+              <div class="total-number">{{ activityStats.total }}</div>
+              <div class="sub-numbers">
+                <div class="sub-item">
+                  <span>总参与人次：</span>
+                  <span>{{ activityStats.participants }}</span>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- 图表展示区域 -->
+    <div class="charts-container">
+      <el-row :gutter="20" justify="center">
+        <el-col :span="9">
+          <el-card class="chart-card">
+            <div ref="taskPieChart" class="chart"></div>
+          </el-card>
+        </el-col>
+        <el-col :span="9">
+          <el-card class="chart-card">
+            <div ref="activityBarChart" class="chart"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" justify="center">
+        <el-col :span="18">
+          <el-card class="chart-card">
+            <div ref="taskLineChart" class="chart"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
   </div>
   <div class="main activity-main" v-if="navChoosed == '活动管理'">
     <el-divider> 发布新的活动 </el-divider>
@@ -566,6 +662,7 @@
 <script>
 import { ElMessageBox } from "element-plus";
 import { Search, SwitchButton } from "@element-plus/icons-vue";
+import * as echarts from "echarts";
 
 export default {
   name: "AdminView",
@@ -604,8 +701,8 @@ export default {
     };
 
     return {
-      navOptions: ["活动管理", "班级管理", "用户管理"],
-      navChoosed: "活动管理",
+      navOptions: ["数据报表", "活动管理", "班级管理", "用户管理"],
+      navChoosed: "数据报表",
       activityList: [],
       editDialogVisible: false,
       editForm: {
@@ -678,7 +775,7 @@ export default {
       teacherOptions: [],
       creatingClass: false,
       classStudents: [], // 当前班级的学生
-      classTeachers: [], // 当前班级的教���
+      classTeachers: [], // 当前班级的教师
       allStudents: [], // 所有可选的学生
       allTeachers: [], // 所有可选的教师
       loadingClassMembers: false,
@@ -698,6 +795,24 @@ export default {
       },
       previewDialogVisible: false, // 预览弹窗的显示状态
       editPreviewDialogVisible: false, // 编辑预览弹窗的显示状态
+      userStats: {
+        total: 1250,
+        teachers: 50,
+        students: 1200,
+      },
+      taskStats: {
+        total: 380,
+        completed: 280,
+        inProgress: 100,
+      },
+      activityStats: {
+        total: 45,
+        participants: 3600,
+      },
+      taskPieChart: null,
+      activityBarChart: null,
+      taskLineChart: null,
+      charts: [], // 用于统一管理所有图表实例
     };
   },
   computed: {
@@ -790,8 +905,232 @@ export default {
       this.updateClassList();
       this.loadUserList();
     }
+    this.$nextTick(() => {
+      this.initCharts();
+    });
   },
   methods: {
+    handleNavChange(newVal) {
+      if (newVal === "数据报表") {
+        this.$nextTick(() => {
+          this.initCharts();
+        });
+      }
+    },
+
+    initCharts() {
+      this.initTaskPieChart();
+      this.initActivityBarChart();
+      this.initTaskLineChart();
+    },
+
+    initTaskLineChart() {
+      this.taskLineChart = echarts.init(this.$refs.taskLineChart);
+      const option = {
+        title: {
+          text: "近期任务完成情况",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            label: {
+              backgroundColor: "#6a7985",
+            },
+          },
+          formatter: function (params) {
+            const data = params[0];
+            return `<div style="font-size:14px;">
+                      <p style="margin:0">${data.axisValue}</p>
+                      <p style="margin:0">
+                        完成任务：<span style="color:#409EFF;font-weight:bold">
+                          ${data.value}</span> 个
+                      </p>
+                    </div>`;
+          },
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: this.getLast7Days(),
+          axisLabel: {
+            formatter: (value) => {
+              return value.substring(5); // 只显示月-日
+            },
+          },
+        },
+        yAxis: {
+          type: "value",
+          name: "任务完成率",
+          nameTextStyle: {
+            padding: [0, 0, 0, 40],
+          },
+        },
+        series: [
+          {
+            name: "任务完成率",
+            type: "line",
+            smooth: true,
+            data: [10, 15, 8, 12, 18, 14, 16],
+            itemStyle: {
+              color: "#409EFF",
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                {
+                  offset: 0,
+                  color: "rgba(64,158,255,0.3)",
+                },
+                {
+                  offset: 1,
+                  color: "rgba(64,158,255,0.1)",
+                },
+              ]),
+            },
+            emphasis: {
+              focus: "series",
+            },
+          },
+        ],
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          top: "60px",
+          containLabel: true,
+        },
+      };
+      this.taskLineChart.setOption(option);
+    },
+
+    getLast7Days() {
+      const dates = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toISOString().split("T")[0]);
+      }
+      return dates;
+    },
+
+    initTaskPieChart() {
+      this.taskPieChart = echarts.init(this.$refs.taskPieChart);
+      const option = {
+        title: {
+          text: "任务完成情况",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          orient: "vertical",
+          left: "left",
+        },
+        series: [
+          {
+            name: "任务状态",
+            type: "pie",
+            radius: ["40%", "70%"],
+            data: [
+              { value: 280, name: "已完成" },
+              { value: 60, name: "进行中" },
+              { value: 25, name: "已逾期" },
+              { value: 15, name: "未开始" },
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
+            },
+          },
+        ],
+      };
+      this.taskPieChart.setOption(option);
+    },
+
+    initActivityBarChart() {
+      this.activityBarChart = echarts.init(this.$refs.activityBarChart);
+      const option = {
+        title: {
+          text: "活动参与情况",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+          axisPointer: {
+            type: "shadow", // 鼠标移动到柱子上时显示阴影
+          },
+          formatter: function (params) {
+            return `<div style="font-size:14px;color:#666;font-weight:400;line-height:1;">
+                    <div style="margin-bottom:10px;">
+                      <span style="display:inline-block;margin-right:4px;
+                        border-radius:10px;width:10px;height:10px;
+                        background-color:${params.color};"></span>
+                      <span style="font-weight:bold">${params.name}</span>
+                    </div>
+                    <div style="margin-left:14px">
+                      参与人数：<span style="font-weight:bold;color:#409EFF">
+                        ${params.value}</span> 人
+                    </div>
+                  </div>`;
+          },
+        },
+        xAxis: {
+          type: "category",
+          data: [
+            "活动一",
+            "活动二",
+            "活动三",
+            "活动四",
+            "活动五",
+            "活动六",
+            "活动二一",
+            "活动二二",
+            "活动二三",
+            "活动二四",
+            "活动二五",
+            "活动二六",
+          ],
+          axisLabel: {
+            interval: 0,
+            rotate: 45,
+            textStyle: {
+              fontSize: 12,
+            },
+            margin: 15,
+          },
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            name: "参与人数",
+            type: "bar",
+            data: [
+              820, 932, 901, 934, 820, 932, 901, 1290, 820, 932, 901, 1330,
+            ],
+            itemStyle: {
+              color: "#409EFF",
+              borderRadius: [4, 4, 0, 0],
+            },
+            emphasis: {
+              itemStyle: {
+                color: "#66b1ff", // 鼠标悬浮时的颜色
+              },
+            },
+          },
+        ],
+        grid: {
+          bottom: 80, // 增加底部空间，防止标签显示不完整
+        },
+      };
+      this.activityBarChart.setOption(option);
+    },
     updateList() {
       this.$apis
         .getActivityList()
@@ -885,7 +1224,7 @@ export default {
     handleEditSubmit() {
       // 验证表单
       if (!this.editForm.title.trim()) {
-        this.$message.error("请输入��动标题");
+        this.$message.error("请输入活动标题");
         return;
       }
       if (!this.editForm.start) {
@@ -1201,7 +1540,7 @@ export default {
           this.resetCreateForm();
           this.updateClassList();
         } else {
-          this.$message.error(response.data.message || "��建失败");
+          this.$message.error(response.data.message || "创建失败");
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
@@ -1407,6 +1746,17 @@ export default {
         return "";
       }
     },
+  },
+  beforeUnmount() {
+    if (this.taskPieChart) {
+      this.taskPieChart.dispose();
+    }
+    if (this.activityBarChart) {
+      this.activityBarChart.dispose();
+    }
+    if (this.taskLineChart) {
+      this.taskLineChart.dispose();
+    }
   },
 };
 </script>
@@ -1749,5 +2099,48 @@ export default {
 /* 确保嵌套弹窗正确显示 */
 :deep(.el-dialog__wrapper) {
   z-index: 2000 !important;
+}
+
+.data-overview {
+  margin-bottom: 20px;
+}
+
+.data-card {
+  height: 180px;
+}
+
+.data-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.total-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #409eff;
+  margin-bottom: 15px;
+}
+
+.sub-numbers {
+  display: flex;
+  justify-content: space-around;
+}
+
+.sub-item {
+  font-size: 14px;
+  color: #606266;
+}
+
+.charts-container {
+  margin-top: 20px;
+}
+
+.chart-card {
+  margin-bottom: 20px;
+}
+
+.chart {
+  height: 400px;
+  width: 100%;
 }
 </style>
