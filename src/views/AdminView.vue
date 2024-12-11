@@ -814,7 +814,7 @@ export default {
         counts: [],
       },
       completionRate: [0, 0, 0, 0],
-      completionRateNear: [],
+      completionRateNear: [0] * 7,
       taskPieChart: null,
       activityBarChart: null,
       taskLineChart: null,
@@ -977,7 +977,7 @@ export default {
       this.$apis
         .getTaskCompletionRateNear()
         .then((response) => {
-          this.completionRateNear = response.completionRate;
+          this.completionRateNear = response.data.completionRate;
           this.initTaskLineChart(true);
         })
         .catch(this.$utils.handleHttpException);
