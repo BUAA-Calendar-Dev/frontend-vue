@@ -107,6 +107,16 @@
         >
           <el-main>
             <el-row align="middle" justify="space-between">
+              <!-- 保留占位，以免影响布局 -->
+              <span
+                v-if="$var.auth.role == 'teacher'"
+                style="visibility: hidden"
+              >
+                You are a teacher
+                <el-button @click="transferToStudent" type="warning" round>
+                  切换为学生
+                </el-button>
+              </span>
               <!-- Header: messages (student) -->
               <span v-if="$var.auth.role == 'student'">
                 <el-badge
@@ -821,10 +831,12 @@ export default {
       await this.updateMessage();
     }
 
-    // 初始化饼图
-    this.$nextTick(() => {
-      this.initPieChart();
-    });
+    if (this.$var.auth.role === "student") {
+      // 初始化饼图
+      this.$nextTick(() => {
+        this.initPieChart();
+      });
+    }
   },
   watch: {
     // 监听视图模式变化

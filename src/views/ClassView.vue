@@ -58,6 +58,9 @@
                 查看班级任务
               </el-button>
               <template v-if="$var.auth.role == 'teacher'">
+                <el-button type="primary" @click="openClassStats(item.id)"
+                  >查看班级统计</el-button
+                >
                 <el-button
                   type="primary"
                   @click="openManageTasksDialog(item.id)"
@@ -307,6 +310,15 @@
         </span>
       </template>
     </el-dialog>
+    <el-dialog
+      v-model="showClassStatsDialog"
+      title="班级任务统计"
+      width="50%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+    >
+      <div ref="classTaskPieChart" class="class-stats-chart"></div>
+    </el-dialog>
   </div>
 </template>
 
@@ -483,6 +495,11 @@
 :deep(.el-card__body) {
   padding: 20px;
 }
+
+.class-stats-chart {
+  height: 400px;
+  width: 100%;
+}
 </style>
 
 <script setup>
@@ -491,6 +508,7 @@ import { DArrowLeft, User } from "@element-plus/icons-vue";
 
 <script>
 import { ElMessageBox } from "element-plus";
+import * as echarts from "echarts";
 
 export default {
   name: "ClassView",
@@ -545,6 +563,14 @@ export default {
         tags: [],
         timeRange: null,
         classId: null,
+      },
+      showClassStatsDialog: false,
+      classTaskPieChart: null,
+      classStats: {
+        completed: 0,
+        inProgress: 0,
+        overdue: 0,
+        notStarted: 0,
       },
     };
   },
@@ -749,6 +775,97 @@ export default {
         }
       }
     },
+    async openClassStats(classId) {
+      this.showClassStatsDialog = true;
+      try {
+        // 这里替换为实际的 API 调用
+        // const response = await this.$apis.getClassTaskStats(classId);
+        // this.classStats = response.data;
+        console.log(classId);
+
+        // 临时使用模拟数据
+        this.classStats = {
+          completed: 35,
+          inProgress: 20,
+          overdue: 15,
+          notStarted: 30,
+        };
+
+        this.$nextTick(() => {
+          this.initClassTaskPieChart();
+        });
+      } catch (error) {
+        this.$utils.handleHttpException(error);
+      }
+    },
+
+    initClassTaskPieChart() {
+      if (this.classTaskPieChart) {
+        this.classTaskPieChart.dispose();
+      }
+
+      this.classTaskPieChart = echarts.init(this.$refs.classTaskPieChart);
+
+      const option = {
+        tooltip: {
+          trigger: "item",
+          formatter: "{b}: {c} ({d}%)",
+        },
+        legend: {
+          orient: "vertical",
+          left: "left",
+          padding: 5,
+        },
+        series: [
+          {
+            name: "任务状态",
+            type: "pie",
+            radius: ["40%", "70%"],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+            label: {
+              show: true,
+              position: "outside",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: "16",
+                fontWeight: "bold",
+              },
+            },
+            data: [
+              {
+                value: this.classStats.completed,
+                name: "已完成",
+                itemStyle: { color: "#67C23A" },
+              },
+              {
+                value: this.classStats.inProgress,
+                name: "进行中",
+                itemStyle: { color: "#409EFF" },
+              },
+              {
+                value: this.classStats.overdue,
+                name: "已逾期",
+                itemStyle: { color: "#F56C6C" },
+              },
+              {
+                value: this.classStats.notStarted,
+                name: "未开始",
+                itemStyle: { color: "#E6A23C" },
+              },
+            ],
+          },
+        ],
+      };
+
+      this.classTaskPieChart.setOption(option);
+    },
   },
   mounted() {
     if (!this.$var.auth.isValid()) {
@@ -760,6 +877,14 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener("resize", this.calculateTableHeight);
+  },
+  watch: {
+    showClassStatsDialog(newVal) {
+      if (!newVal && this.classTaskPieChart) {
+        this.classTaskPieChart.dispose();
+        this.classTaskPieChart = null;
+      }
+    },
   },
 };
 </script>
