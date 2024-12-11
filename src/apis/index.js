@@ -53,7 +53,7 @@ import {
 import { impowerTeacher, resetUserPassword, getAllUsers } from "./user";
 import {
   getTaskCompletionRateNear,
-  getTaskCompletionRate,
+  getTaskCompletion,
   getTaskClassCompletion,
   getTaskSchoolCompletion,
   getActivityJoining,
@@ -453,7 +453,7 @@ export default new (class {
     /**
      * 获取任务完成率
      */
-    this.getTaskCompletionRate = getTaskCompletionRate;
+    this.getTaskCompletion = getTaskCompletion;
 
     /**
      * 获取班级任务完成率

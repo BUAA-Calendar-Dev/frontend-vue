@@ -55,7 +55,5 @@ export function getActivityJoining() {
  * @returns {completionRate: [number]}
  */
 export function getTaskCompletionRateNear() {
-  return axios.get(
-    process.env.VUE_APP_ROOT_URL + "/api/task/near-completion-rate"
-  );
+  return axios.get(process.env.VUE_APP_ROOT_URL + "/api/task/completion/7days");
 }

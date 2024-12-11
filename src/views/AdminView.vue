@@ -813,10 +813,11 @@ export default {
         names: [],
         counts: [],
       },
+      taskCompletion: [],
+      completionRateNear: [],
       taskPieChart: null,
       activityBarChart: null,
       taskLineChart: null,
-      charts: [], // 用于统一管理所有图表实例
     };
   },
   computed: {
@@ -931,6 +932,21 @@ export default {
       //   })
       //   .catch(this.$utils.handleHttpException);
       this.$apis
+        .getAvailableStudents()
+        .then((response) => {
+          this.userStats.students = (response.data.students || []).length;
+          this.$apis
+            .getAvailableTeachers()
+            .then((response) => {
+              this.userStats.teachers = (response.data.teachers || []).length;
+              this.userStats.total =
+                this.userStats.students + this.userStats.teachers;
+            })
+            .catch(this.$utils.handleHttpException);
+        })
+        .catch(this.$utils.handleHttpException);
+
+      this.$apis
         .getTaskCount()
         .then((response) => {
           this.taskStats.total = response.data.total;
@@ -949,6 +965,20 @@ export default {
             0
           );
           this.initActivityBarChart(false);
+        })
+        .catch(this.$utils.handleHttpException);
+      this.$apis
+        .getTaskCompletion()
+        .then((response) => {
+          this.taskCompletion = response.completionRate;
+          this.initTaskPieChart(false);
+        })
+        .catch(this.$utils.handleHttpException);
+      this.$apis
+        .getTaskCompletionRateNear()
+        .then((response) => {
+          this.completionRateNear = response.completionRate;
+          this.initTaskLineChart(false);
         })
         .catch(this.$utils.handleHttpException);
     },
@@ -1008,7 +1038,7 @@ export default {
             name: "任务完成率",
             type: "line",
             smooth: true,
-            data: [10, 15, 8, 12, 18, 14, 16],
+            data: this.completionRateNear,
             itemStyle: {
               color: "#409EFF",
             },
@@ -1072,10 +1102,10 @@ export default {
             type: "pie",
             radius: ["40%", "70%"],
             data: [
-              { value: 280, name: "已完成" },
-              { value: 60, name: "进行中" },
-              { value: 25, name: "已逾期" },
-              { value: 15, name: "未开始" },
+              { value: this.taskCompletion[0], name: "已完成" },
+              { value: this.taskCompletion[1], name: "进行中" },
+              { value: this.taskCompletion[2], name: "已逾期" },
+              { value: this.taskCompletion[3], name: "未开始" },
             ],
             emphasis: {
               itemStyle: {
