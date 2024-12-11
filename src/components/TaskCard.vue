@@ -38,8 +38,10 @@
         "
       />
       <div class="task-time">
-        <span>开始: {{ new Date(task.start).toLocaleString() }}</span>
-        <span>结束: {{ new Date(task.end).toLocaleString() }}</span>
+        <div>开始: {{ new Date(task.start).toLocaleString() }}</div>
+      </div>
+      <div class="task-time">
+        <div>结束: {{ new Date(task.end).toLocaleString() }}</div>
       </div>
     </div>
   </el-card>

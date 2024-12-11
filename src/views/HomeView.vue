@@ -18,7 +18,7 @@
           </div>
 
           <!-- 任务列表 -->
-          <el-scrollbar height="calc(100vh - 100px)" class="task-scrollbar">
+          <el-scrollbar height="calc(100vh - 450px)" class="task-scrollbar">
             <el-row
               v-for="task in taskList"
               :key="task.id"
