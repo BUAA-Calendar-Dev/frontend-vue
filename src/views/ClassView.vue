@@ -58,20 +58,40 @@
                 查看班级任务
               </el-button>
               <template v-if="$var.auth.role == 'teacher'">
-                <el-button type="primary" @click="openClassStats(item.id)"
-                  >查看班级统计</el-button
-                >
-                <el-button
-                  type="primary"
-                  @click="openManageTasksDialog(item.id)"
-                  >管理班级任务</el-button
-                >
-                <el-button type="primary" @click="openTaskDialog(item.id)"
-                  >布置班级任务</el-button
-                >
-                <el-button type="primary" @click="openMessageDialog(item.id)"
-                  >发布班级消息</el-button
-                >
+                <el-row :gutter="10">
+                  <el-col :sm="24" :md="12" :lg="6" class="mb-2">
+                    <el-button
+                      type="primary"
+                      @click="openClassStats(item.id)"
+                      style="width: 100%"
+                      >查看统计</el-button
+                    >
+                  </el-col>
+                  <el-col :sm="24" :md="12" :lg="6" class="mb-2">
+                    <el-button
+                      type="primary"
+                      @click="openManageTasksDialog(item.id)"
+                      style="width: 100%"
+                      >管理任务</el-button
+                    >
+                  </el-col>
+                  <el-col :sm="24" :md="12" :lg="6" class="mb-2">
+                    <el-button
+                      type="primary"
+                      @click="openTaskDialog(item.id)"
+                      style="width: 100%"
+                      >布置任务</el-button
+                    >
+                  </el-col>
+                  <el-col :sm="24" :md="12" :lg="6" class="mb-2">
+                    <el-button
+                      type="primary"
+                      @click="openMessageDialog(item.id)"
+                      style="width: 100%"
+                      >发布消息</el-button
+                    >
+                  </el-col>
+                </el-row>
               </template>
             </div>
           </el-card>
