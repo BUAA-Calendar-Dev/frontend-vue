@@ -96,6 +96,9 @@
             </div>
           </div>
         </span>
+
+        <!-- 在侧边栏底部添加饼图 -->
+        <div class="chart-container" ref="pieChart"></div>
       </el-aside>
       <el-container>
         <el-header
@@ -166,11 +169,11 @@
           <!-- 添加视图切换按钮 -->
           <div class="view-switch">
             <el-radio-group v-model="viewMode" size="large">
-              <el-radio-button label="calendar" style="color: #000"
-                >日历视图</el-radio-button
+              <el-radio-button label="calendar"
+                ><font color="#000">日历视图</font></el-radio-button
               >
-              <el-radio-button label="list" style="color: #000"
-                >列表视图</el-radio-button
+              <el-radio-button label="list"
+                ><font color="#000">列表视图</font></el-radio-button
               >
             </el-radio-group>
           </div>
@@ -649,6 +652,7 @@ import MessageList from "@/components/MessageList.vue";
 import TagDialogInner from "@/components/TagDialogInner.vue";
 import { ElMessageBox } from "element-plus";
 import TaskCard from "@/components/TaskCard.vue";
+import * as echarts from "echarts";
 
 export default {
   name: "HomeView",
@@ -714,6 +718,7 @@ export default {
         { value: "purple", label: "紫色", class: "event-purple" },
         { value: "red", label: "红色", class: "event-red" },
       ],
+      pieChart: null,
     };
   },
   computed: {
@@ -815,6 +820,11 @@ export default {
       await this.updateEvents();
       await this.updateMessage();
     }
+
+    // 初始化饼图
+    this.$nextTick(() => {
+      this.initPieChart();
+    });
   },
   watch: {
     // 监听视图模式变化
@@ -1300,6 +1310,109 @@ export default {
         this.$message.error("修改颜色失败：" + error.message);
       }
     },
+    initPieChart() {
+      // 确保容器存在
+      if (!this.$refs.pieChart) return;
+
+      // 初始化图表
+      this.pieChart = echarts.init(this.$refs.pieChart);
+
+      // 配置项
+      const option = {
+        title: {
+          text:
+            this.$var.auth.role === "teacher" ? "班级完成情况" : "任务完成情况",
+          left: "center",
+        },
+        tooltip: {
+          trigger: "item",
+          formatter: "{a} <br/>{b}: {c} ({d}%)",
+        },
+        legend: {
+          orient: "vertical",
+          left: "left",
+          padding: 5,
+        },
+        series: [
+          {
+            name: "任务状态",
+            type: "pie",
+            radius: ["30%", "60%"],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: "#fff",
+              borderWidth: 2,
+            },
+            label: {
+              show: false,
+              position: "center",
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: "18",
+                fontWeight: "bold",
+              },
+            },
+            labelLine: {
+              show: false,
+            },
+            data: [
+              { value: 35, name: "已完成" },
+              { value: 20, name: "进行中" },
+              { value: 15, name: "已逾期" },
+              { value: 30, name: "未开始" },
+            ],
+          },
+        ],
+        color: ["#67C23A", "#409EFF", "#F56C6C", "#E6A23C"],
+      };
+
+      // 设置配置项
+      this.pieChart.setOption(option);
+
+      // 监听窗口大小变化，调整图表大小
+      window.addEventListener("resize", () => {
+        this.pieChart && this.pieChart.resize();
+      });
+    },
+
+    // 更新图表数据的方法
+    updatePieChartData() {
+      if (!this.pieChart) return;
+
+      // 这里可以根据实际数据更新图表
+      const newData = [
+        { value: this.getRandomInt(20, 40), name: "已完成" },
+        { value: this.getRandomInt(15, 30), name: "进行中" },
+        { value: this.getRandomInt(10, 20), name: "已逾期" },
+        { value: this.getRandomInt(25, 35), name: "未开始" },
+      ];
+
+      this.pieChart.setOption({
+        series: [
+          {
+            data: newData,
+          },
+        ],
+      });
+    },
+
+    // 生成随机数的辅助方法
+    getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+  },
+  beforeUnmount() {
+    // 销毁图表，避免内存泄漏
+    if (this.pieChart) {
+      this.pieChart.dispose();
+      this.pieChart = null;
+    }
+
+    // 移除窗口大小变化监听器
+    window.removeEventListener("resize", this.pieChart && this.pieChart.resize);
   },
 };
 </script>
@@ -1938,7 +2051,7 @@ html {
 }
 
 :deep(.vuecal__cell) {
-  background-color: v-bind("preferences.theme"); /* 单元��景色 */
+  background-color: v-bind("preferences.theme"); /* 单元格背景色 */
 }
 
 :deep(.vuecal__title-bar) {
@@ -2019,8 +2132,12 @@ html {
   padding: 8px 16px;
 }
 
-:deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
-  box-shadow: none;
+:deep(.el-radio-button.is-active.color-option > span) {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+:deep(.el-radio-button__original-radio .el-radio-button__inner) {
   background-color: inherit;
 }
 
@@ -2055,10 +2172,13 @@ html {
 }
 
 :deep(.el-radio-button.is-active .el-radio-button__inner) {
+  font-weight: 600;
+}
+
+:deep(.el-radio-button.is-active.color-option .el-radio-button__inner) {
   color: white !important;
   background-color: transparent !important;
   border-color: #dcdfe6 !important;
-  box-shadow: -1px 0 0 0 #dcdfe6 !important;
   transform: scale(1.05);
 }
 
@@ -2073,17 +2193,32 @@ html {
 
 /* 修改视图切换按钮的样式 */
 :deep(.el-radio-button__inner) {
-  color: #000 !important;
+  color: #fff !important;
 }
 
 :deep(.el-radio-button.is-active .el-radio-button__inner) {
   color: #000 !important;
   background-color: transparent !important;
   border-color: #dcdfe6 !important;
-  box-shadow: -1px 0 0 0 #dcdfe6 !important;
 }
 
 :deep(.el-radio-button:not(.is-active):hover .el-radio-button__inner) {
   color: #000 !important;
+}
+
+.chart-container {
+  width: 100%;
+  height: 300px;
+  margin-top: auto;
+  padding: 20px;
+}
+
+.app-aside {
+  display: flex;
+  flex-direction: column;
+}
+
+#app > div.calendar-view > section > aside {
+  overflow-x: hidden;
 }
 </style>
