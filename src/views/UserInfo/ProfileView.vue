@@ -511,7 +511,7 @@ export default {
       username: "<Unknown Username>",
       nickname: "",
       isEditingNickname: false,
-      avatar: "/favicon.ico",
+      avatar: "/default-avatar.avif",
       genderMap: {
         male: "男",
         female: "女",

@@ -677,7 +677,7 @@ export default {
       messageList: [],
       unread: 0,
       message_drawer: false,
-      userAvatar: "/favicon.ico",
+      userAvatar: "/default-avatar.avif",
       username: "",
       selectedDate: "",
       dialogVisible: false, // 用于控制 dialog 的显示与隐藏
@@ -962,7 +962,7 @@ export default {
         const response = await this.$apis.getUserInfo(this.$var.auth.id);
         if (response.data) {
           this.username = response.data.name || response.data.username; // 优先使用 name，如果没有则使用 username
-          this.userAvatar = response.data.avatar || "/favicon.ico";
+          this.userAvatar = response.data.avatar || "/default-avatar.png";
         }
       } catch (error) {
         this.$utils.handleHttpException(error);
