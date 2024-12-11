@@ -98,7 +98,9 @@
         </span>
 
         <!-- 在侧边栏底部添加饼图 -->
-        <div class="chart-container" ref="pieChart"></div>
+        <div class="chart-container">
+          <div ref="pieChart" style="width: 300px; height: 300px"></div>
+        </div>
       </el-aside>
       <el-container>
         <el-header
@@ -2227,7 +2229,10 @@ html {
 }
 
 .chart-container {
-  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 300px;
   height: 300px;
   margin-top: auto;
   padding: 20px;
