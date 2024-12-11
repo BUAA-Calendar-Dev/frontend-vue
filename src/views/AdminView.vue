@@ -796,18 +796,22 @@ export default {
       previewDialogVisible: false, // 预览弹窗的显示状态
       editPreviewDialogVisible: false, // 编辑预览弹窗的显示状态
       userStats: {
-        total: 1250,
-        teachers: 50,
-        students: 1200,
+        total: 0,
+        teachers: 0,
+        students: 0,
       },
       taskStats: {
-        total: 380,
-        completed: 280,
-        inProgress: 100,
+        total: 0,
+        completed: 0,
+        inProgress: 0,
       },
       activityStats: {
-        total: 45,
-        participants: 3600,
+        total: 0,
+        participants: 0,
+      },
+      activity: {
+        names: [],
+        counts: [],
       },
       taskPieChart: null,
       activityBarChart: null,
@@ -837,7 +841,6 @@ export default {
           inClass: this.classStudents.some((s) => s.id === student.id),
         }));
     },
-
     filteredTeacherList() {
       if (!this.teacherSearch) {
         return this.allTeachers.map((teacher) => ({
@@ -901,6 +904,7 @@ export default {
       this.$router.push({ path: "/" });
     } else {
       // 初始化数据
+      this.fetchStatistics();
       this.fetchActivityList();
       this.updateClassList();
       this.loadUserList();
@@ -917,15 +921,47 @@ export default {
         });
       }
     },
-
+    fetchStatistics() {
+      // this.$apis
+      //   .getUserCount()
+      //   .then((response) => {
+      //     this.userStats.total = response.data.teacher + response.data.student;
+      //     this.userStats.teachers = response.data.teacher;
+      //     this.userStats.students = response.data.student;
+      //   })
+      //   .catch(this.$utils.handleHttpException);
+      this.$apis
+        .getTaskCount()
+        .then((response) => {
+          this.taskStats.total = response.data.total;
+          this.taskStats.completed = response.data.done;
+          this.taskStats.inProgress = response.data.total - response.data.done;
+        })
+        .catch(this.$utils.handleHttpException);
+      this.$apis
+        .getActivityJoining()
+        .then((response) => {
+          this.activity.names = response.data.activity;
+          this.activity.counts = response.data.join;
+          this.activityStats.total = response.data.activity.length;
+          this.activityStats.participants = response.data.join.reduce(
+            (accumulator, currentValue) => accumulator + currentValue,
+            0
+          );
+          this.initActivityBarChart(false);
+        })
+        .catch(this.$utils.handleHttpException);
+    },
     initCharts() {
-      this.initTaskPieChart();
-      this.initActivityBarChart();
-      this.initTaskLineChart();
+      this.initTaskPieChart(true);
+      this.initActivityBarChart(true);
+      this.initTaskLineChart(true);
     },
 
-    initTaskLineChart() {
-      this.taskLineChart = echarts.init(this.$refs.taskLineChart);
+    initTaskLineChart(init) {
+      if (init) {
+        this.taskLineChart = echarts.init(this.$refs.taskLineChart);
+      }
       const option = {
         title: {
           text: "近期任务完成情况",
@@ -1014,8 +1050,10 @@ export default {
       return dates;
     },
 
-    initTaskPieChart() {
-      this.taskPieChart = echarts.init(this.$refs.taskPieChart);
+    initTaskPieChart(init) {
+      if (init) {
+        this.taskPieChart = echarts.init(this.$refs.taskPieChart);
+      }
       const option = {
         title: {
           text: "任务完成情况",
@@ -1052,8 +1090,10 @@ export default {
       this.taskPieChart.setOption(option);
     },
 
-    initActivityBarChart() {
-      this.activityBarChart = echarts.init(this.$refs.activityBarChart);
+    initActivityBarChart(init) {
+      if (init) {
+        this.activityBarChart = echarts.init(this.$refs.activityBarChart);
+      }
       const option = {
         title: {
           text: "活动参与情况",
@@ -1081,20 +1121,7 @@ export default {
         },
         xAxis: {
           type: "category",
-          data: [
-            "活动一",
-            "活动二",
-            "活动三",
-            "活动四",
-            "活动五",
-            "活动六",
-            "活动二一",
-            "活动二二",
-            "活动二三",
-            "活动二四",
-            "活动二五",
-            "活动二六",
-          ],
+          data: this.activity.names,
           axisLabel: {
             interval: 0,
             rotate: 45,
@@ -1111,9 +1138,7 @@ export default {
           {
             name: "参与人数",
             type: "bar",
-            data: [
-              820, 932, 901, 934, 820, 932, 901, 1290, 820, 932, 901, 1330,
-            ],
+            data: this.activity.counts,
             itemStyle: {
               color: "#409EFF",
               borderRadius: [4, 4, 0, 0],

@@ -12,7 +12,7 @@ export function getUserCount() {
  * 获取任务数量，每位学生的每个任务算一项？
  * @returns {task: number, done: number}
  */
-export function getTaskount() {
+export function getTaskCount() {
   return axios.get(process.env.VUE_APP_ROOT_URL + "/api/task/count");
 }
 
