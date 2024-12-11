@@ -1442,12 +1442,12 @@ export default {
 <style scoped>
 .calendar-view,
 .el-container,
-#app,
 body,
 html {
   width: 100%;
   height: 100%;
   margin: 0;
+  min-height: 100vh;
 }
 
 .vuecal__special-hours {
