@@ -51,6 +51,15 @@ import {
   getClassTaskList,
 } from "@/apis/class";
 import { impowerTeacher, resetUserPassword, getAllUsers } from "./user";
+import {
+  getTaskCompletionRateNear,
+  getTaskCompletionRate,
+  getTaskClassCompletion,
+  getTaskSchoolCompletion,
+  getActivityJoining,
+  getUserCount,
+  getTaskCount,
+} from "@/apis/statistics";
 
 import axios from "axios";
 
@@ -435,5 +444,40 @@ export default new (class {
      * 获取班级任务列表
      */
     this.getClassTaskList = getClassTaskList;
+
+    /**
+     * 获取近期任务完成率
+     */
+    this.getTaskCompletionRateNear = getTaskCompletionRateNear;
+
+    /**
+     * 获取任务完成率
+     */
+    this.getTaskCompletionRate = getTaskCompletionRate;
+
+    /**
+     * 获取班级任务完成率
+     */
+    this.getTaskClassCompletion = getTaskClassCompletion;
+
+    /**
+     * 获取个人任务完成率
+     */
+    this.getTaskSchoolCompletion = getTaskSchoolCompletion;
+
+    /**
+     * 获取活动参与人次
+     */
+    this.getActivityJoining = getActivityJoining;
+
+    /**
+     * 获取用户数量
+     */
+    this.getUserCount = getUserCount;
+
+    /**
+     * 获取任务数量
+     */
+    this.getTaskCount = getTaskCount;
   }
 })();
