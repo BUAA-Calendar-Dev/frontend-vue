@@ -104,13 +104,6 @@
         >
           <el-main>
             <el-row align="middle" justify="space-between">
-              <!-- Header: switch-role (teacher) [TODO] -->
-              <span v-if="$var.auth.role == 'teacher'">
-                You are a teacher
-                <el-button @click="transferToStudent" type="warning" round>
-                  切换为学生
-                </el-button>
-              </span>
               <!-- Header: messages (student) -->
               <span v-if="$var.auth.role == 'student'">
                 <el-badge
