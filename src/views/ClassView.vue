@@ -795,7 +795,7 @@ export default {
       try {
         // 这里替换为实际的 API 调用
         const response = await this.$apis.getTaskClassCompletion(classId);
-        this.classStats = response.data;
+        this.classStats = response.data.completionRate;
 
         this.$nextTick(() => {
           this.initClassTaskPieChart();
