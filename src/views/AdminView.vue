@@ -813,7 +813,7 @@ export default {
         names: [],
         counts: [],
       },
-      taskCompletion: [],
+      completionRate: [0, 0, 0, 0],
       completionRateNear: [],
       taskPieChart: null,
       activityBarChart: null,
@@ -910,9 +910,9 @@ export default {
       this.updateClassList();
       this.loadUserList();
     }
-    this.$nextTick(() => {
-      this.initCharts();
-    });
+    // this.$nextTick(() => {
+    //   this.initCharts();
+    // });
   },
   methods: {
     handleNavChange(newVal) {
@@ -964,21 +964,21 @@ export default {
             (accumulator, currentValue) => accumulator + currentValue,
             0
           );
-          this.initActivityBarChart(false);
+          this.initActivityBarChart(true);
         })
         .catch(this.$utils.handleHttpException);
       this.$apis
         .getTaskCompletion()
         .then((response) => {
-          this.taskCompletion = response.completionRate;
-          this.initTaskPieChart(false);
+          this.completionRate = response.data.completionRate || [0, 0, 0, 0];
+          this.initTaskPieChart(true);
         })
         .catch(this.$utils.handleHttpException);
       this.$apis
         .getTaskCompletionRateNear()
         .then((response) => {
           this.completionRateNear = response.completionRate;
-          this.initTaskLineChart(false);
+          this.initTaskLineChart(true);
         })
         .catch(this.$utils.handleHttpException);
     },
@@ -1102,10 +1102,10 @@ export default {
             type: "pie",
             radius: ["40%", "70%"],
             data: [
-              { value: this.taskCompletion[0], name: "已完成" },
-              { value: this.taskCompletion[1], name: "进行中" },
-              { value: this.taskCompletion[2], name: "已逾期" },
-              { value: this.taskCompletion[3], name: "未开始" },
+              { value: this.completionRate[0], name: "已完成" },
+              { value: this.completionRate[1], name: "进行中" },
+              { value: this.completionRate[2], name: "已逾期" },
+              { value: this.completionRate[3], name: "未开始" },
             ],
             emphasis: {
               itemStyle: {
