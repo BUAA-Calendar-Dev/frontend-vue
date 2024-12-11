@@ -265,7 +265,7 @@
               </el-table-column>
 
               <el-table-column
-                label="结时间"
+                label="结束时间"
                 prop="end"
                 min-width="160"
                 sortable
@@ -728,6 +728,7 @@ export default {
         { value: "purple", label: "紫色", class: "event-purple" },
         { value: "red", label: "红色", class: "event-red" },
       ],
+      taskCompletion: [0, 0, 0, 0],
       pieChart: null,
     };
   },
@@ -832,10 +833,7 @@ export default {
     }
 
     if (this.$var.auth.role === "student") {
-      // 初始化饼图
-      this.$nextTick(() => {
-        this.initPieChart();
-      });
+      this.fetchPieStatistics(true);
     }
   },
   watch: {
@@ -849,6 +847,15 @@ export default {
     },
   },
   methods: {
+    fetchPieStatistics(init) {
+      this.$apis
+        .getTaskSchoolCompletion()
+        .then((response) => {
+          this.taskCompletion = response.data.completionRate || [];
+          this.initPieChart(init);
+        })
+        .catch(this.$utils.handleHttpException);
+    },
     customEventCreation() {
       this.eventDialogVisible = true;
       console.log(this.eventDialogVisible);
@@ -1103,6 +1110,7 @@ export default {
         this.$message.success(task.completed ? "任务已完成" : "已取消完成状态");
         // 刷新数据
         await this.updateEvents();
+        this.fetchPieStatistics(false);
       } catch (error) {
         // 恢复状态
         task.completed = !task.completed;
@@ -1322,18 +1330,18 @@ export default {
         this.$message.error("修改颜色失败：" + error.message);
       }
     },
-    initPieChart() {
-      // 确保容器存在
-      if (!this.$refs.pieChart) return;
-
-      // 初始化图表
-      this.pieChart = echarts.init(this.$refs.pieChart);
+    initPieChart(init) {
+      if (init) {
+        // 确保容器存在
+        if (!this.$refs.pieChart) return;
+        // 初始化图表
+        this.pieChart = echarts.init(this.$refs.pieChart);
+      }
 
       // 配置项
       const option = {
         title: {
-          text:
-            this.$var.auth.role === "teacher" ? "班级完成情况" : "任务完成情况",
+          text: "任务完成情况",
           left: "center",
         },
         tooltip: {
@@ -1371,10 +1379,10 @@ export default {
               show: false,
             },
             data: [
-              { value: 35, name: "已完成" },
-              { value: 20, name: "进行中" },
-              { value: 15, name: "已逾期" },
-              { value: 30, name: "未开始" },
+              { value: this.taskCompletion[0], name: "已完成" },
+              { value: this.taskCompletion[1], name: "进行中" },
+              { value: this.taskCompletion[2], name: "已逾期" },
+              { value: this.taskCompletion[3], name: "未开始" },
             ],
           },
         ],
