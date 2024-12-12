@@ -583,17 +583,6 @@
         />
       </el-form-item>
 
-      <el-form-item label="完成状态">
-        <el-checkbox
-          v-model="selectedTask.completed"
-          :disabled="
-            calculateProgress(selectedTask.start, selectedTask.end) >= 100
-          "
-        >
-          已完成
-        </el-checkbox>
-      </el-form-item>
-
       <!-- 添加标签选择 -->
       <el-form-item label="任务标签">
         <el-select
